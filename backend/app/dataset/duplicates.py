@@ -28,7 +28,8 @@ def compute_hashes_for_records(records: List[SampleRecord]) -> Dict[str, Dict[st
 
 def detect_near_duplicates(
     records: List[SampleRecord],
-    similarity_threshold: float = 0.92
+    similarity_threshold: float = 0.92,
+    min_cluster_size: int = 2
 ) -> Tuple[List[Dict[str, Any]], Dict[str, List[str]]]:
     """
     Detect near-duplicate image clusters using pHash and dHash hamming distance.
@@ -69,7 +70,7 @@ def detect_near_duplicates(
             if dist_ph <= max_hamming_dist and dist_dh <= max_hamming_dist:
                 current_cluster.append(sid_j)
 
-        if len(current_cluster) >= 3:  # Require at least 3 to avoid accidental near-duplicate pairs
+        if len(current_cluster) >= min_cluster_size:
             for s in current_cluster:
                 visited.add(s)
                 sample_to_dup_map[s] = [other for other in current_cluster if other != s]

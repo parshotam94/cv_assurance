@@ -11,34 +11,44 @@ from backend.app.dataset.loader import SampleRecord
 def extract_basic_visual_features(img_path: str) -> np.ndarray:
     """
     Extract offline statistical visual feature vector:
-    - RGB color histogram (32 bins each)
-    - Grayscale mean, std, contrast
-    - Grayscale gradients (Sobel-like)
+    - Global RGB channel statistics (means, standard deviations)
+    - Center object crop statistics (means, standard deviations)
+    - Chromatic channel interaction ratios (B/R, R/G)
+    - Grayscale gradients (spatial variation / texture energy)
     """
     try:
         with Image.open(img_path) as im:
             im_rgb = im.convert("RGB").resize((64, 64))
             arr = np.array(im_rgb, dtype=np.float32) / 255.0
             
-            # Color histograms
-            r_hist, _ = np.histogram(arr[:, :, 0], bins=8, range=(0, 1))
-            g_hist, _ = np.histogram(arr[:, :, 1], bins=8, range=(0, 1))
-            b_hist, _ = np.histogram(arr[:, :, 2], bins=8, range=(0, 1))
+            # Global channel statistics
+            g_means = arr.mean(axis=(0, 1))
+            g_stds = arr.std(axis=(0, 1))
             
-            # Grayscale stats
+            # Center object crop (32x32 center region where objects are localized)
+            center = arr[16:48, 16:48]
+            c_means = center.mean(axis=(0, 1))
+            c_stds = center.std(axis=(0, 1))
+            
+            # Chromatic interaction ratios
+            r_c, g_c, b_c = c_means
+            br_ratio = b_c / (r_c + 1e-4)
+            rg_ratio = r_c / (g_c + 1e-4)
+            
+            # Grayscale texture & spatial gradients
             gray = 0.2989 * arr[:, :, 0] + 0.5870 * arr[:, :, 1] + 0.1140 * arr[:, :, 2]
-            mean_val = np.mean(gray)
-            std_val = np.std(gray)
-            
-            # Spatial gradients
             dx = np.diff(gray, axis=1)
             dy = np.diff(gray, axis=0)
             grad_energy = np.mean(np.abs(dx)) + np.mean(np.abs(dy))
 
-            feat = np.hstack([r_hist / 4096.0, g_hist / 4096.0, b_hist / 4096.0, [mean_val, std_val, grad_energy]])
+            feat = np.hstack([
+                g_means, g_stds,
+                c_means, c_stds,
+                [br_ratio, rg_ratio, grad_energy]
+            ])
             return feat.astype(np.float32)
     except Exception:
-        return np.zeros(27, dtype=np.float32)
+        return np.zeros(15, dtype=np.float32)
 
 def analyze_labels_and_mislabelling(
     records: List[SampleRecord],
@@ -98,13 +108,12 @@ def analyze_labels_and_mislabelling(
             neighbor_indices = indices[i][1:]  # exclude self
             neighbor_labels = [sample_primary_label[valid_sample_records[idx].sample_id] for idx in neighbor_indices]
             
-            # Check if all or most neighbors disagree
+            # Check neighbor consensus
             neighbor_counts = Counter(neighbor_labels)
             most_common_neighbor_label, top_count = neighbor_counts.most_common(1)[0]
             
             disagreement_rate = 1.0 - (neighbor_counts.get(current_label, 0) / k)
 
-            # Source-aware threshold: samples from untrusted/rogue sources are more suspect
             source_id = getattr(rec, "source_id", "")
             is_suspect_source = (
                 source_id and (
@@ -114,12 +123,10 @@ def analyze_labels_and_mislabelling(
                     "bad" in source_id.lower()
                 )
             )
-            # Lower detection threshold for suspect sources
-            detection_threshold = 0.3 if is_suspect_source else 0.4
 
-            if disagreement_rate >= detection_threshold and most_common_neighbor_label != current_label:
-                # Disagreement between feature neighborhood and label
-                confidence = "HIGH" if disagreement_rate >= 0.8 else ("MEDIUM" if disagreement_rate >= 0.5 else "LOW")
+            # A sample is flagged if its k-NN feature neighborhood consensus disagrees with its assigned label
+            if disagreement_rate >= 0.6 and most_common_neighbor_label != current_label:
+                confidence = "HIGH" if disagreement_rate >= 0.8 else "MEDIUM"
                 suspicious_samples.append({
                     "sample_id": rec.sample_id,
                     "image_path": rec.image_path,
@@ -129,7 +136,11 @@ def analyze_labels_and_mislabelling(
                     "confidence": confidence,
                     "source_id": source_id,
                     "batch_id": rec.batch_id,
-                    "reason": f"Sample label '{current_label}' disagrees with {int(disagreement_rate*100)}% of feature-space nearest neighbors (consensus: '{most_common_neighbor_label}').{' Source flagged as high-risk.' if is_suspect_source else ''}"
+                    "reason": (
+                        f"Sample label '{current_label}' disagrees with {int(disagreement_rate*100)}% "
+                        f"of feature-space nearest neighbors (consensus: '{most_common_neighbor_label}')."
+                        f"{' Source flagged as high-risk.' if is_suspect_source else ''}"
+                    )
                 })
 
     return distribution_stats, suspicious_samples

@@ -98,8 +98,8 @@ def run_full_assurance_demo():
     # -------------------------------------------------------------
     print("\n[Step 4/12] Running dataset integrity engines...")
     
-    # 4a. Near duplicates — threshold=0.95 (hamming ≤ 3 bits) with AND logic to reduce FPR
-    dup_clusters, sample_dup_map = detect_near_duplicates(valid_records, similarity_threshold=0.95)
+    # 4a. Near duplicates — threshold=0.95 (hamming ≤ 3 bits) with AND logic and min_cluster_size=3 for flooding
+    dup_clusters, sample_dup_map = detect_near_duplicates(valid_records, similarity_threshold=0.95, min_cluster_size=3)
     detected_duplicates = set(sample_dup_map.keys())
     print(f"  - Perceptual duplicate clusters: {len(dup_clusters)} (affected samples: {len(detected_duplicates)})")
 

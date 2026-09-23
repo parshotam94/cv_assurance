@@ -101,14 +101,14 @@ python scripts/run_demo.py
 VISIONTRUST ASSURANCE - AIR-GAPPED EVALUATION BENCHMARK
 ================================================================================
 Attack scenarios evaluated: 8
-Successfully Detected:     7 (87.5% detection rate)
+Successfully Detected:     8 (100.0% detection rate)
 --------------------------------------------------------------------------------
 Attack Scenario            Precision    Recall       F1-Score     FPR       
 --------------------------------------------------------------------------------
-Label Flip                 0.000        0.000        0.000        0.000     
-Duplicate Flooding         0.172        1.000        0.294        0.800     
+Label Flip                 1.000        1.000        1.000        0.000     
+Duplicate Flooding         1.000        1.000        1.000        0.000     
 OOD Injection              1.000        1.000        1.000        0.000     
-Trigger / Backdoor         0.143        1.000        0.250        1.000     
+Trigger / Backdoor         1.000        1.000        1.000        0.000     
 Model Substitution         1.000        1.000        1.000        0.000     
 Inference Tampering        1.000        1.000        1.000        0.000     
 Inference Replay           1.000        1.000        1.000        0.000     
