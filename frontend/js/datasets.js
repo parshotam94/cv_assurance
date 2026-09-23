@@ -105,6 +105,21 @@ async function loadDatasets() {
       });
     });
 
+    // Automatically display analysis results & load samples for first analyzed dataset on load
+    if (select && (!select.value || select.value === '')) {
+      const analyzed = datasets.find(d => d.status === 'ANALYZED' && (d.risk_score > 0 || d.sample_count > 0));
+      if (analyzed) {
+        select.value = analyzed.id;
+        try {
+          const details = await API.getDataset(analyzed.id);
+          displayAnalysisResults(details, false);
+          await loadSamples();
+        } catch (e) {
+          console.warn('Could not auto-display dataset results:', e);
+        }
+      }
+    }
+
   } catch (err) {
     showToast(`Failed to load datasets: ${err.message}`, 'error');
   }
@@ -120,7 +135,7 @@ async function triggerAnalysis(datasetId, buttonEl) {
     showToast(`Analysis completed for ${datasetId}! Risk score: ${res.overall_risk_score.toFixed(1)}`, 'success');
     
     // Display results panel
-    displayAnalysisResults(res);
+    displayAnalysisResults(res, true);
     await loadDatasets();
 
     // Select in sample explorer
@@ -137,36 +152,46 @@ async function triggerAnalysis(datasetId, buttonEl) {
   }
 }
 
-function displayAnalysisResults(res) {
+function displayAnalysisResults(res, shouldScroll = true) {
   const panel = document.getElementById('dataset-analysis-panel');
   if (!panel) return;
 
   panel.style.display = 'block';
-  document.getElementById('analysis-ds-id').textContent = res.dataset_id;
-  document.getElementById('analysis-ds-disposition').innerHTML = getRiskBadge(res.disposition);
-  document.getElementById('res-dup-count').textContent = res.duplicate_clusters;
-  document.getElementById('res-mislabel-count').textContent = res.mislabelled_samples;
-  document.getElementById('res-ood-count').textContent = res.ood_samples;
-  document.getElementById('res-trigger-count').textContent = res.trigger_clusters;
+  const dsId = res.dataset_id || res.id || '';
+  document.getElementById('analysis-ds-id').textContent = dsId;
+  document.getElementById('analysis-ds-disposition').innerHTML = getRiskBadge(res.disposition || 'ACCEPT');
+
+  const dupCount = res.duplicate_clusters !== undefined ? res.duplicate_clusters : (res.summary?.duplicate_clusters || 0);
+  const mislabelCount = res.mislabelled_samples !== undefined ? res.mislabelled_samples : (res.summary?.mislabelled_count || 0);
+  const oodCount = res.ood_samples !== undefined ? res.ood_samples : (res.summary?.ood_count || 0);
+  const triggerCount = res.trigger_clusters !== undefined ? res.trigger_clusters : (res.summary?.trigger_clusters || 0);
+
+  document.getElementById('res-dup-count').textContent = dupCount;
+  document.getElementById('res-mislabel-count').textContent = mislabelCount;
+  document.getElementById('res-ood-count').textContent = oodCount;
+  document.getElementById('res-trigger-count').textContent = triggerCount;
 
   const sourcesDiv = document.getElementById('sources-breakdown-list');
-  if (sourcesDiv && res.source_profiles) {
-    sourcesDiv.innerHTML = res.source_profiles.map(s => `
+  const sourceList = res.source_profiles || res.sources || [];
+  if (sourcesDiv && sourceList.length > 0) {
+    sourcesDiv.innerHTML = sourceList.map(s => `
       <div style="background: var(--bg-input); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
           <strong style="font-size: 0.85rem;">${s.source_id}</strong>
-          ${getRiskBadge(s.risk_level)}
+          ${getRiskBadge(s.risk_level || (s.risk_score >= 80 ? 'CRITICAL' : s.risk_score >= 60 ? 'HIGH' : s.risk_score >= 30 ? 'MEDIUM' : 'LOW'))}
         </div>
         <div style="font-size: 0.78rem; color: var(--text-dim);">
-          <div>Samples: ${s.sample_count} (Suspicious: ${s.suspicious_count})</div>
-          <div>Anomaly Rate: ${(s.anomaly_rate * 100).toFixed(1)}%</div>
-          <div>Disposition: <strong>${s.disposition}</strong></div>
+          <div>Samples: ${s.sample_count || s.samples || 0} (Suspicious: ${s.suspicious_count || s.suspicious || 0})</div>
+          <div>Risk Score: ${(s.risk_score || 0).toFixed(1)}</div>
+          <div>Disposition: <strong>${s.disposition || 'ACCEPT'}</strong></div>
         </div>
       </div>
     `).join('');
   }
 
-  panel.scrollIntoView({ behavior: 'smooth' });
+  if (shouldScroll) {
+    panel.scrollIntoView({ behavior: 'smooth' });
+  }
 }
 
 async function loadSamples() {

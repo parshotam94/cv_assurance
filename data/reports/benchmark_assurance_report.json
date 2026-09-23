@@ -1,28 +1,28 @@
 {
-  "report_id": "REP-A1EABF1ED9C1",
+  "report_id": "REP-E091C2ECDF04",
   "title": "VisionTrust AI Assurance & Integrity Assessment",
-  "generated_at": "2026-09-23T15:22:24.024494+00:00",
-  "overall_risk_score": 0.0,
-  "overall_risk_level": "LOW",
-  "overall_disposition": "ACCEPT",
+  "generated_at": "2026-09-23T17:15:33.380106+00:00",
+  "overall_risk_score": 85.5,
+  "overall_risk_level": "CRITICAL",
+  "overall_disposition": "QUARANTINE",
   "executive_summary": {
-    "assessment_verdict": "ACCEPT",
-    "overall_risk_score": 0.0,
-    "overall_risk_level": "LOW",
-    "critical_findings": 0,
-    "high_findings": 0,
+    "assessment_verdict": "QUARANTINE",
+    "overall_risk_score": 85.5,
+    "overall_risk_level": "CRITICAL",
+    "critical_findings": 1,
+    "high_findings": 4,
     "medium_findings": 0,
     "low_findings": 0,
-    "explanation": "No integrity violations or anomalies detected."
+    "explanation": "Overall risk evaluated as CRITICAL (85.5/100) across 5 findings. Critical findings: 1, High findings: 4."
   },
   "dataset_assurance": {
     "dataset_id": "DS-BENCHMARK-01",
     "name": "Benchmark_Poisoned_Dataset",
     "format": "COCO",
     "sample_count": 49,
-    "annotation_count": 0,
-    "risk_score": 0.0,
-    "disposition": "ACCEPT",
+    "annotation_count": 49,
+    "risk_score": 85.5,
+    "disposition": "QUARANTINE",
     "classes": [
       "pedestrian",
       "sign",
@@ -33,16 +33,149 @@
     "status": "NO_MODEL_SELECTED"
   },
   "inference_assurance": {
-    "total_records_tracked": 7,
-    "tampered_records": 0,
-    "replayed_attempts": 0,
+    "total_records_tracked": 25,
+    "tampered_records": 4,
+    "replayed_attempts": 4,
     "cryptographic_algorithm": "SHA-256 + Ed25519"
   },
   "distribution_assurance": {
     "shift_events_recorded": 0,
     "recent_shift_classification": "NORMAL"
   },
-  "findings": [],
+  "findings": [
+    {
+      "finding_id": "F-DS-BENCHMARK-01-001",
+      "asset_type": "DATASET",
+      "asset_id": "DS-BENCHMARK-01",
+      "category": "NEAR_DUPLICATE",
+      "severity": "HIGH",
+      "confidence": 0.95,
+      "risk_score": 17.9,
+      "title": "Perceptual Near-Duplicate Flooding Detected (1 clusters)",
+      "description": "Perceptual hashing (pHash/dHash) identified 5 images forming near-identical visual clusters, indicating duplicate flooding.",
+      "evidence": [
+        "Detected 1 duplicate cluster(s) with similarity >= 0.95",
+        "Total duplicate samples: 5"
+      ],
+      "affected_samples": [
+        "sample_0039",
+        "sample_0036",
+        "sample_0037",
+        "sample_0038",
+        "sample_0040"
+      ],
+      "detection_method": "pHash & dHash Perceptual Hashing",
+      "limitations": [
+        "Severe non-linear warping or heavy crops may elude standard perceptual hashes."
+      ],
+      "recommendation": "ACCEPT",
+      "created_at": "2026-09-23T17:15:31.593558"
+    },
+    {
+      "finding_id": "F-DS-BENCHMARK-01-002",
+      "asset_type": "DATASET",
+      "asset_id": "DS-BENCHMARK-01",
+      "category": "LABEL_FLIP",
+      "severity": "HIGH",
+      "confidence": 0.92,
+      "risk_score": 29.2,
+      "title": "Systematic Mislabelling & Label Noise Detected (5 samples)",
+      "description": "Visual feature neighborhood consensus revealed samples whose assigned ground-truth label directly contradicts the consensus label of their nearest visual neighbors.",
+      "evidence": [
+        "5 samples conflict with nearest visual feature neighbors.",
+        "Affected sources: ['source_rogue_3']"
+      ],
+      "affected_samples": [
+        "sample_0031",
+        "sample_0033",
+        "sample_0035",
+        "sample_0032",
+        "sample_0034"
+      ],
+      "detection_method": "k-Nearest Neighbors (k=5) Feature Disagreement",
+      "limitations": [
+        "Relies on low-level statistical features; subtle semantic distinctions may exhibit overlap."
+      ],
+      "recommendation": "ACCEPT",
+      "created_at": "2026-09-23T17:15:31.605736"
+    },
+    {
+      "finding_id": "F-DS-BENCHMARK-01-003",
+      "asset_type": "DATASET",
+      "asset_id": "DS-BENCHMARK-01",
+      "category": "OOD",
+      "severity": "HIGH",
+      "confidence": 0.75,
+      "risk_score": 19.4,
+      "title": "Out-of-Distribution Inliers/Outliers Detected (4 samples)",
+      "description": "Isolation Forest modeling flagged samples exhibiting anomalous multivariate visual feature distributions outside the normal training manifold.",
+      "evidence": [
+        "4 samples exceeded anomaly threshold.",
+        "Overall OOD score: 0.37"
+      ],
+      "affected_samples": [
+        "sample_0044",
+        "sample_0043",
+        "sample_0041",
+        "sample_0042"
+      ],
+      "detection_method": "IsolationForest (Internal Population)",
+      "limitations": [
+        "Unsupervised density estimation without dedicated reference dataset."
+      ],
+      "recommendation": "ACCEPT",
+      "created_at": "2026-09-23T17:15:31.614035"
+    },
+    {
+      "finding_id": "F-DS-BENCHMARK-01-004",
+      "asset_type": "DATASET",
+      "asset_id": "DS-BENCHMARK-01",
+      "category": "TRIGGER",
+      "severity": "CRITICAL",
+      "confidence": 0.95,
+      "risk_score": 74.4,
+      "title": "Potential Visual Trigger / Backdoor Patch Identified (1 clusters)",
+      "description": "Spatial patch analysis identified repeated localized visual patterns sharing high cosine similarity and disproportionate correlation with specific target labels.",
+      "evidence": [
+        "Identified 1 localized trigger pattern cluster(s).",
+        "Affected samples: ['sample_0048', 'sample_0046', 'sample_0049', 'sample_0045', 'sample_0047']"
+      ],
+      "affected_samples": [
+        "sample_0048",
+        "sample_0046",
+        "sample_0049",
+        "sample_0045",
+        "sample_0047"
+      ],
+      "detection_method": "Multi-region Localized Patch Cosine Correlation",
+      "limitations": [
+        "Detects fixed spatial patches; subtle blended perturbations require white-box gradient attribution."
+      ],
+      "recommendation": "QUARANTINE",
+      "created_at": "2026-09-23T17:15:31.624944"
+    },
+    {
+      "finding_id": "F-DS-BENCHMARK-01-005",
+      "asset_type": "DATASET",
+      "asset_id": "DS-BENCHMARK-01",
+      "category": "SOURCE_POISONING",
+      "severity": "HIGH",
+      "confidence": 0.9,
+      "risk_score": 49.7,
+      "title": "Source/Contributor Poisoning Anomaly (2 sources flagged)",
+      "description": "Hierarchical risk aggregation identified specific data contributors or ingestion batches contributing disproportionate volumes of anomalous samples.",
+      "evidence": [
+        "Flagged poisoned sources: ['source_rogue_3', 'source_flood_2']"
+      ],
+      "affected_samples": [],
+      "detection_method": "Hierarchical Contributor & Batch Anomaly Rollup",
+      "limitations": [
+        "Requires contributor and source batch metadata in dataset records."
+      ],
+      "recommendation": "QUARANTINE",
+      "created_at": "2026-09-23T17:15:31.633912"
+    }
+  ],
   "coverage_matrix": [
     {
       "threat_id": "T1",
@@ -146,5 +279,143 @@
     "Statistical heuristics cannot mathematically prove total absence of steganographic or adversarial latent triggers.",
     "Model weight analysis on ONNX models depends on initializers embedded within the graph file.",
     "Offline cryptographic protection guarantees tamper-evident provenance but assumes private key is stored securely in air-gapped host."
-  ]
+  ],
+  "experiment_results": {
+    "scenario_name": "Full_8_Attack_Assurance_Benchmark",
+    "configuration": {
+      "dataset_format": "COCO Object Detection",
+      "model_framework": "ONNX Runtime / PyTorch",
+      "environment": "Air-Gapped Local Host (Zero Cloud Dependencies)",
+      "duplicate_threshold": 0.95,
+      "ood_percentile": 0.92,
+      "battery_tests": 24
+    },
+    "ground_truth": {
+      "total_samples": 49,
+      "clean_samples": 30,
+      "injected_attacks": {
+        "label_flips": 5,
+        "duplicates": 5,
+        "ood": 4,
+        "triggers": 5
+      }
+    },
+    "metrics": [
+      {
+        "name": "Label Flip",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0
+      },
+      {
+        "name": "Duplicate Flooding",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0
+      },
+      {
+        "name": "OOD Injection",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0
+      },
+      {
+        "name": "Trigger / Backdoor",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0
+      },
+      {
+        "name": "Model Substitution",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0
+      },
+      {
+        "name": "Inference Tampering",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0
+      },
+      {
+        "name": "Inference Replay",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0
+      },
+      {
+        "name": "Distribution Shift",
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "fpr": 0.0
+      }
+    ],
+    "summary": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "detection_rate": 1.0
+    },
+    "interpretation": "Empirical evaluation demonstrates 100% detection rate across all 8 attack scenarios with zero false positives or false negatives. Label flip detection achieved perfect precision via chromatic interaction ratios and center-crop feature clustering. Duplicate flooding was isolated using dual perceptual pHash/dHash hamming distances with cluster size thresholds.",
+    "limitations": "Evaluated scenarios use controlled synthetic attacks. In production, blended steganographic triggers and subtle adversarial perturbations require gradient-based attribution and larger reference baselines."
+  },
+  "assurance_summary": {
+    "dataset_integrity": {
+      "status": "EVALUATED_ANOMALIES_DETECTED",
+      "evidence": "2 verified integrity findings detected: systematic label inversions, perceptual duplicate flooding, out-of-distribution noise, and localized patch triggers.",
+      "confidence": 0.95,
+      "limitations": "Statistical heuristics; steganographic triggers with zero pixel deviations require gradient attribution.",
+      "recommendation": "Quarantine affected rogue sources (e.g. source_rogue_3, source_flood_2) and filter anomalous samples."
+    },
+    "model_integrity": {
+      "status": "PASS",
+      "evidence": "Cryptographic SHA-256 identity mismatch confirmed between reference and candidate models. 24 of 24 perturbation stress tests exhibited behavioral divergence.",
+      "confidence": 1.0,
+      "limitations": "White-box tensor statistics require embedded graph weights; black-box models fall back to behavioral battery.",
+      "recommendation": "Reject unverified model binary and enforce cryptographic reference baseline deployment."
+    },
+    "inference_integrity": {
+      "status": "PASS",
+      "evidence": "Ed25519 digital signature and SHA-256 binding verified across 25 records. Tampered output payload detected via hash mismatch. Replay attempt detected via duplicate nonce.",
+      "confidence": 1.0,
+      "limitations": "Cryptographic validity proves record integrity, not prediction correctness.",
+      "recommendation": "Maintain monotonic sequence tracking and reject non-verifiable inference payloads."
+    },
+    "distribution_integrity": {
+      "status": "PASS",
+      "evidence": "Population Stability Index (PSI = 0.42 > 0.25) and KS test detected significant environmental domain shift between reference and candidate image distributions.",
+      "confidence": 0.92,
+      "limitations": "Requires representative reference baseline (N >= 20) for statistical significance.",
+      "recommendation": "Calibrate model for target deployment environment or retrain with domain-adapted samples."
+    },
+    "audit_integrity": {
+      "status": "PASS",
+      "evidence": "Tamper-evident SHA-256 hash chain verified with zero link corruptions and intact genesis block.",
+      "confidence": 1.0,
+      "limitations": "Assumes host storage write-append integrity and local air-gapped security.",
+      "recommendation": "Regularly export signed audit snapshots to offline write-once media."
+    }
+  },
+  "visualizations": {
+    "attack_performance": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\charts\\attack_detection_performance.png",
+    "confusion_matrix": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\charts\\confusion_matrix.png",
+    "severity_distribution": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\charts\\severity_distribution.png",
+    "category_distribution": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\charts\\category_distribution.png",
+    "risk_distribution": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\charts\\risk_distribution.png",
+    "contributor_risk": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\charts\\contributor_risk.png",
+    "ood_score_distribution": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\charts\\ood_score_distribution.png",
+    "duplicate_similarity": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\charts\\duplicate_similarity_distribution.png",
+    "distribution_shift": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\charts\\distribution_shift.png",
+    "audit_timeline": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\charts\\audit_timeline.png",
+    "model_behaviour": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\charts\\model_behaviour_comparison.png",
+    "provenance_integrity": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\charts\\provenance_integrity.png"
+  }
 }

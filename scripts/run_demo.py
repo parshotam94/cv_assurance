@@ -2,11 +2,17 @@
 End-to-End Automated Demonstration and Evaluation Benchmark
 Executes all 8 attack scenarios, analyzes findings against ground truth, and calculates
 empirical metrics: Precision, Recall, F1, False Positive Rate (FPR), and Detection Rate.
+Persists all benchmark datasets, samples, models, findings, inference records, and audit events to SQLite.
 """
 import sys
 import json
-import numpy as np
+import uuid
 from pathlib import Path
+import numpy as np
+
+# Reconfigure stdout for safe Windows UTF-8 execution
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -15,7 +21,11 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from backend.app.config import settings
 from backend.app.database.database import SessionLocal, init_db
 from backend.app.database.repository import Repository
-from backend.app.database.models import DatasetModel, DatasetSampleModel, DatasetSourceModel, InferenceRecordModel, FindingModel
+from backend.app.database.models import (
+    DatasetModel, DatasetSampleModel, DatasetSourceModel,
+    ModelAssetModel, InferenceRecordModel, FindingModel, ExperimentModel, ReportModel
+)
+from backend.app.core.risk_engine import calculate_finding_risk, aggregate_asset_risk
 from backend.app.core.audit import log_audit_event, verify_audit_chain
 from experiments.create_demo_model import create_demo_models
 from experiments.generate_poisoned_data import generate_poisoned_experiment_dataset
@@ -51,6 +61,22 @@ def run_full_assurance_demo():
     init_db()
     repo = Repository(db)
 
+    # Clean existing benchmark entities for idempotency
+    dataset_ids = ["DS-BENCHMARK-01", "DS-REF-DOMAIN", "DS-SHIFT-DOMAIN"]
+    model_ids = ["MOD-REF-ONNX", "MOD-SUB-ONNX"]
+    
+    db.query(DatasetSampleModel).filter(DatasetSampleModel.dataset_id.in_(dataset_ids)).delete(synchronize_session=False)
+    db.query(DatasetSourceModel).filter(DatasetSourceModel.dataset_id.in_(dataset_ids)).delete(synchronize_session=False)
+    db.query(FindingModel).filter(
+        (FindingModel.asset_id.in_(dataset_ids + model_ids)) |
+        (FindingModel.finding_id.like("F-%")) |
+        (FindingModel.asset_type == "INFERENCE")
+    ).delete(synchronize_session=False)
+    db.query(DatasetModel).filter(DatasetModel.id.in_(dataset_ids)).delete(synchronize_session=False)
+    db.query(ModelAssetModel).filter(ModelAssetModel.id.in_(model_ids)).delete(synchronize_session=False)
+    db.query(ReportModel).filter(ReportModel.title.contains("Benchmark")).delete(synchronize_session=False)
+    db.commit()
+
     # -------------------------------------------------------------
     # STEP 1: Generate Controlled Attack Dataset & Models
     # -------------------------------------------------------------
@@ -65,7 +91,7 @@ def run_full_assurance_demo():
 
     print("\n[Step 2/12] Generating reference & candidate models...")
     model_paths = create_demo_models()
-    print(f"  - Models created: PyTorch reference, ONNX reference, Candidate PT, Substituted ONNX.")
+    print("  - Models created: PyTorch reference, ONNX reference, Candidate PT, Substituted ONNX.")
 
     # -------------------------------------------------------------
     # STEP 3: Dataset Ingestion & Validation
@@ -76,35 +102,49 @@ def run_full_assurance_demo():
     print(f"  - Validated records: {len(valid_records)} (Issues: {len(validation_issues)})")
 
     dataset_id = "DS-BENCHMARK-01"
-    # Ensure idempotency by deleting any previous benchmark records
-    db.query(DatasetSampleModel).filter(DatasetSampleModel.dataset_id == dataset_id).delete()
-    db.query(DatasetSourceModel).filter(DatasetSourceModel.dataset_id == dataset_id).delete()
-    db.query(FindingModel).filter(FindingModel.asset_id == dataset_id).delete()
-    db.query(DatasetModel).filter(DatasetModel.id == dataset_id).delete()
-    db.commit()
-
     repo.create_dataset({
         "id": dataset_id,
         "name": "Benchmark_Poisoned_Dataset",
         "format": "COCO",
         "file_path": dataset_info["dataset_dir"],
         "sample_count": len(valid_records),
+        "annotation_count": len(valid_records),
         "classes": json.dumps(class_names),
         "status": "ANALYZING"
     })
+
+    # Persist all sample objects into database
+    sample_objs = []
+    for r in valid_records:
+        sample_objs.append({
+            "dataset_id": dataset_id,
+            "sample_id": r.sample_id,
+            "image_path": str(Path(r.image_path).resolve()),
+            "source_id": r.source_id,
+            "batch_id": r.batch_id,
+            "contributor": r.contributor,
+            "width": r.width,
+            "height": r.height,
+            "labels": json.dumps(r.labels),
+            "annotations": json.dumps(r.annotations),
+            "metadata_json": json.dumps(r.metadata),
+            "is_suspicious": False,
+            "anomaly_reasons": "[]"
+        })
+    repo.add_samples(sample_objs)
 
     # -------------------------------------------------------------
     # STEP 4: Dataset Integrity Analysis
     # -------------------------------------------------------------
     print("\n[Step 4/12] Running dataset integrity engines...")
     
-    # 4a. Near duplicates — threshold=0.95 (hamming ≤ 3 bits) with AND logic and min_cluster_size=3 for flooding
+    # 4a. Near duplicates — threshold=0.95 (hamming <= 3 bits) with AND logic and min_cluster_size=3 for flooding
     dup_clusters, sample_dup_map = detect_near_duplicates(valid_records, similarity_threshold=0.95, min_cluster_size=3)
     detected_duplicates = set(sample_dup_map.keys())
     print(f"  - Perceptual duplicate clusters: {len(dup_clusters)} (affected samples: {len(detected_duplicates)})")
 
     # 4b. Label mislabelling
-    _, mislabelled_samples = analyze_labels_and_mislabelling(valid_records, class_names)
+    label_stats, mislabelled_samples = analyze_labels_and_mislabelling(valid_records, class_names)
     detected_mislabels = {s["sample_id"] for s in mislabelled_samples}
     print(f"  - Suspicious mislabelled samples: {len(detected_mislabels)}")
 
@@ -123,6 +163,152 @@ def run_full_assurance_demo():
     repo.update_sources(dataset_id, source_risks)
     flagged_sources = [s["source_id"] for s in source_risks if s["risk_level"] in ["CRITICAL", "HIGH"]]
     print(f"  - High-risk poisoned sources flagged: {flagged_sources}")
+
+    # Mark suspicious samples in DB
+    all_susp_sids = detected_duplicates | detected_mislabels | detected_oods | detected_triggers
+    samples_in_db = db.query(DatasetSampleModel).filter(DatasetSampleModel.dataset_id == dataset_id).all()
+    for s in samples_in_db:
+        if s.sample_id in all_susp_sids:
+            s.is_suspicious = True
+            reasons = []
+            if s.sample_id in detected_duplicates:
+                reasons.append("Near duplicate cluster")
+            if s.sample_id in detected_mislabels:
+                reasons.append("Label disagreement with visual neighbors")
+            if s.sample_id in detected_oods:
+                reasons.append("Feature outlier (OOD)")
+            if s.sample_id in detected_triggers:
+                reasons.append("Contains repeated localized trigger patch")
+            s.anomaly_reasons = json.dumps(reasons)
+    db.commit()
+
+    # Create findings for dataset
+    findings_list = []
+    finding_counter = 1
+    total_pop = len(valid_records)
+
+    if dup_clusters:
+        aff = list(detected_duplicates)
+        score, lvl, disp = calculate_finding_risk("NEAR_DUPLICATE", "HIGH", 0.95, len(aff), total_pop)
+        findings_list.append({
+            "finding_id": f"F-{dataset_id}-{finding_counter:03d}",
+            "asset_type": "DATASET",
+            "asset_id": dataset_id,
+            "category": "NEAR_DUPLICATE",
+            "severity": "HIGH",
+            "confidence": 0.95,
+            "risk_score": score,
+            "title": f"Perceptual Near-Duplicate Flooding Detected ({len(dup_clusters)} clusters)",
+            "description": f"Perceptual hashing (pHash/dHash) identified {len(aff)} images forming near-identical visual clusters, indicating duplicate flooding.",
+            "evidence": json.dumps([f"Detected {len(dup_clusters)} duplicate cluster(s) with similarity >= 0.95", f"Total duplicate samples: {len(aff)}"]),
+            "affected_samples": json.dumps(aff),
+            "detection_method": "pHash & dHash Perceptual Hashing",
+            "limitations": json.dumps(["Severe non-linear warping or heavy crops may elude standard perceptual hashes."]),
+            "recommendation": disp
+        })
+        finding_counter += 1
+
+    if mislabelled_samples:
+        aff = list(detected_mislabels)
+        score, lvl, disp = calculate_finding_risk("LABEL_FLIP", "HIGH", 0.92, len(aff), total_pop)
+        findings_list.append({
+            "finding_id": f"F-{dataset_id}-{finding_counter:03d}",
+            "asset_type": "DATASET",
+            "asset_id": dataset_id,
+            "category": "LABEL_FLIP",
+            "severity": "HIGH",
+            "confidence": 0.92,
+            "risk_score": score,
+            "title": f"Systematic Mislabelling & Label Noise Detected ({len(aff)} samples)",
+            "description": "Visual feature neighborhood consensus revealed samples whose assigned ground-truth label directly contradicts the consensus label of their nearest visual neighbors.",
+            "evidence": json.dumps([f"{len(aff)} samples conflict with nearest visual feature neighbors.", f"Affected sources: {list(set(s['source_id'] for s in mislabelled_samples))}"]),
+            "affected_samples": json.dumps(aff),
+            "detection_method": "k-Nearest Neighbors (k=5) Feature Disagreement",
+            "limitations": json.dumps(["Relies on low-level statistical features; subtle semantic distinctions may exhibit overlap."]),
+            "recommendation": disp
+        })
+        finding_counter += 1
+
+    if ood_samples:
+        aff = list(detected_oods)
+        score, lvl, disp = calculate_finding_risk("OOD", "HIGH", ood_summary["confidence"], len(aff), total_pop)
+        findings_list.append({
+            "finding_id": f"F-{dataset_id}-{finding_counter:03d}",
+            "asset_type": "DATASET",
+            "asset_id": dataset_id,
+            "category": "OOD",
+            "severity": "HIGH",
+            "confidence": ood_summary["confidence"],
+            "risk_score": score,
+            "title": f"Out-of-Distribution Inliers/Outliers Detected ({len(aff)} samples)",
+            "description": "Isolation Forest modeling flagged samples exhibiting anomalous multivariate visual feature distributions outside the normal training manifold.",
+            "evidence": json.dumps([f"{len(aff)} samples exceeded anomaly threshold.", f"Overall OOD score: {ood_summary['ood_score']}"]),
+            "affected_samples": json.dumps(aff),
+            "detection_method": ood_summary["detection_method"],
+            "limitations": json.dumps(["Unsupervised density estimation without dedicated reference dataset."]),
+            "recommendation": disp
+        })
+        finding_counter += 1
+
+    if trigger_clusters:
+        aff = list(detected_triggers)
+        score, lvl, disp = calculate_finding_risk("TRIGGER", "CRITICAL", 0.95, len(aff), total_pop)
+        findings_list.append({
+            "finding_id": f"F-{dataset_id}-{finding_counter:03d}",
+            "asset_type": "DATASET",
+            "asset_id": dataset_id,
+            "category": "TRIGGER",
+            "severity": "CRITICAL",
+            "confidence": 0.95,
+            "risk_score": score,
+            "title": f"Potential Visual Trigger / Backdoor Patch Identified ({len(trigger_clusters)} clusters)",
+            "description": "Spatial patch analysis identified repeated localized visual patterns sharing high cosine similarity and disproportionate correlation with specific target labels.",
+            "evidence": json.dumps([f"Identified {len(trigger_clusters)} localized trigger pattern cluster(s).", f"Affected samples: {aff}"]),
+            "affected_samples": json.dumps(aff),
+            "detection_method": "Multi-region Localized Patch Cosine Correlation",
+            "limitations": json.dumps(["Detects fixed spatial patches; subtle blended perturbations require white-box gradient attribution."]),
+            "recommendation": "QUARANTINE"
+        })
+        finding_counter += 1
+
+    if flagged_sources:
+        score, lvl, disp = calculate_finding_risk("SOURCE_POISONING", "HIGH", 0.90, len(flagged_sources), len(source_risks))
+        findings_list.append({
+            "finding_id": f"F-{dataset_id}-{finding_counter:03d}",
+            "asset_type": "DATASET",
+            "asset_id": dataset_id,
+            "category": "SOURCE_POISONING",
+            "severity": "HIGH",
+            "confidence": 0.90,
+            "risk_score": score,
+            "title": f"Source/Contributor Poisoning Anomaly ({len(flagged_sources)} sources flagged)",
+            "description": "Hierarchical risk aggregation identified specific data contributors or ingestion batches contributing disproportionate volumes of anomalous samples.",
+            "evidence": json.dumps([f"Flagged poisoned sources: {flagged_sources}"]),
+            "affected_samples": json.dumps([]),
+            "detection_method": "Hierarchical Contributor & Batch Anomaly Rollup",
+            "limitations": json.dumps(["Requires contributor and source batch metadata in dataset records."]),
+            "recommendation": "QUARANTINE"
+        })
+        finding_counter += 1
+
+    for f in findings_list:
+        repo.create_finding(f)
+
+    # Update dataset status & summary
+    overall_ds_risk = aggregate_asset_risk(findings_list)
+    repo.update_dataset(dataset_id, {
+        "status": "ANALYZED",
+        "risk_score": overall_ds_risk["risk_score"],
+        "disposition": overall_ds_risk["disposition"],
+        "analysis_summary": json.dumps({
+            "duplicate_clusters": len(dup_clusters),
+            "mislabelled_count": len(mislabelled_samples),
+            "ood_count": len(ood_samples),
+            "trigger_clusters": len(trigger_clusters),
+            "sources_evaluated": len(source_risks),
+            "overall_explanation": overall_ds_risk["explanation"]
+        })
+    })
 
     # -------------------------------------------------------------
     # STEP 5: Model Integrity & Substitution Analysis
@@ -150,6 +336,93 @@ def run_full_assurance_demo():
     trigger_sens = evaluate_model_trigger_sensitivity(sub_adapter, sample_count=15)
     print(f"  - Trigger perturbation vulnerability: {trigger_sens['high_vulnerability_detected']}")
 
+    # Register models in database
+    ref_model_id = "MOD-REF-ONNX"
+    sub_model_id = "MOD-SUB-ONNX"
+
+    repo.create_model_asset({
+        "id": ref_model_id,
+        "name": "MobileNetV2_Reference_ONNX",
+        "framework": "ONNX",
+        "file_path": str(Path(model_paths["reference_onnx"]).resolve()),
+        "sha256": ref_fp["sha256"],
+        "file_size_bytes": Path(model_paths["reference_onnx"]).stat().st_size,
+        "parameter_count": ref_fp["parameter_count"],
+        "architecture": "MobileNetV2",
+        "input_shape": str(ref_fp.get("input_shape", "[1, 3, 224, 224]")),
+        "output_shape": str(ref_fp.get("output_shape", "[1, 1000]")),
+        "access_level": "WHITE_BOX",
+        "fingerprint_json": json.dumps(ref_fp),
+        "status": "ANALYZED",
+        "risk_score": 0.0,
+        "disposition": "ACCEPT"
+    })
+
+    repo.create_model_asset({
+        "id": sub_model_id,
+        "name": "ResNet18_Substituted_ONNX",
+        "framework": "ONNX",
+        "file_path": str(Path(model_paths["substituted_onnx"]).resolve()),
+        "sha256": sub_fp["sha256"],
+        "file_size_bytes": Path(model_paths["substituted_onnx"]).stat().st_size,
+        "parameter_count": sub_fp["parameter_count"],
+        "architecture": "ResNet18",
+        "input_shape": str(sub_fp.get("input_shape", "[1, 3, 224, 224]")),
+        "output_shape": str(sub_fp.get("output_shape", "[1, 1000]")),
+        "access_level": "WHITE_BOX",
+        "fingerprint_json": json.dumps(sub_fp),
+        "behavioural_summary": json.dumps(battery_res),
+        "trigger_summary": json.dumps(trigger_sens),
+        "status": "ANALYZED",
+        "risk_score": 92.0,
+        "disposition": "QUARANTINE"
+    })
+
+    # Model findings
+    sub_score, _, sub_disp = calculate_finding_risk("MODEL_SUBSTITUTION", "CRITICAL", 1.0, 1, 1)
+    repo.create_finding({
+        "finding_id": f"F-{sub_model_id}-001",
+        "asset_type": "MODEL",
+        "asset_id": sub_model_id,
+        "category": "MODEL_SUBSTITUTION",
+        "severity": "CRITICAL",
+        "confidence": 1.0,
+        "risk_score": sub_score,
+        "title": f"Model Integrity Deviation: {substitution_result['status']}",
+        "description": substitution_result["details"],
+        "evidence": json.dumps([
+            f"Candidate SHA-256: {sub_fp['sha256']}",
+            f"Reference SHA-256: {ref_fp['sha256']}",
+            f"Parameter difference ratio: {int(substitution_result.get('parameter_difference_ratio', 0)*100)}%",
+            f"Weight norm difference ratio: {int(substitution_result.get('weight_norm_difference_ratio', 0)*100)}%"
+        ]),
+        "affected_samples": json.dumps([]),
+        "detection_method": "Cryptographic Fingerprint & Tensor Parameter Comparison",
+        "limitations": json.dumps(["Requires valid baseline reference model for identity assertion."]),
+        "recommendation": "QUARANTINE"
+    })
+
+    bat_score, _, bat_disp = calculate_finding_risk("BACKDOOR_BEHAVIOUR", "HIGH", 0.90, battery_res["anomalous_inputs_count"], battery_res["total_battery_tests"])
+    repo.create_finding({
+        "finding_id": f"F-{sub_model_id}-002",
+        "asset_type": "MODEL",
+        "asset_id": sub_model_id,
+        "category": "BACKDOOR_BEHAVIOUR",
+        "severity": "HIGH",
+        "confidence": 0.90,
+        "risk_score": bat_score,
+        "title": f"Behavioural Battery Instability Detected (Agreement: {int(battery_res.get('behavioural_agreement_rate', 0)*100)}%)",
+        "description": f"Candidate model exhibited divergent prediction outputs on {battery_res['anomalous_inputs_count']} of {battery_res['total_battery_tests']} perturbation tests compared to reference.",
+        "evidence": json.dumps([
+            f"Behavioural class agreement: {int(battery_res.get('behavioural_agreement_rate', 0)*100)}%",
+            f"Anomalous test inputs: {battery_res['anomalous_inputs_count']}"
+        ]),
+        "affected_samples": json.dumps([]),
+        "detection_method": "Controlled Environmental & Perturbation Input Battery",
+        "limitations": json.dumps(["Synthetically perturbed inputs evaluate robustness; subtle adversarial triggers may require gradient attacks."]),
+        "recommendation": bat_disp
+    })
+
     # -------------------------------------------------------------
     # STEP 7: Inference Provenance & Tamper Testing
     # -------------------------------------------------------------
@@ -169,8 +442,11 @@ def run_full_assurance_demo():
     print(f"  - Tampered inference record: {tamp_verif.status} (Detected in: {tamp_verif.tamper_detected_in})")
 
     # Persist clean record for replay check (ensure idempotency)
-    db.query(InferenceRecordModel).filter(InferenceRecordModel.record_id == clean_rec.record_id).delete()
+    tamp_rec_id = f"{tampered_rec.record_id}-TAMP"
+    replay_rec_id = f"{replayed_rec.record_id}-REPLAY"
+    db.query(InferenceRecordModel).filter(InferenceRecordModel.record_id.in_([clean_rec.record_id, tamp_rec_id, replay_rec_id])).delete(synchronize_session=False)
     db.commit()
+
     repo.create_inference_record({
         "record_id": clean_rec.record_id,
         "input_sha256": clean_rec.input_sha256,
@@ -194,6 +470,83 @@ def run_full_assurance_demo():
     replay_res = check_for_replay_attack(db, replayed_rec)
     print(f"  - Replay attack detected: {replay_res['is_replay']} (Reasons: {len(replay_res['reasons'])})")
 
+    # Persist tampered & replayed records and findings
+    repo.create_inference_record({
+        "record_id": tamp_rec_id,
+        "input_sha256": tampered_rec.input_sha256,
+        "model_sha256": tampered_rec.model_sha256,
+        "preprocessing_sha256": tampered_rec.preprocessing_sha256,
+        "config_sha256": tampered_rec.config_sha256,
+        "output_sha256": tampered_rec.output_sha256,
+        "timestamp": tampered_rec.timestamp,
+        "nonce": tampered_rec.nonce,
+        "sequence": tampered_rec.sequence,
+        "record_hash": tampered_rec.record_hash,
+        "signature": tampered_rec.signature,
+        "public_key_hex": tampered_rec.public_key_hex,
+        "is_tampered": True,
+        "is_replayed": False,
+        "verification_status": "TAMPERED",
+        "verification_details": json.dumps(tamp_verif.model_dump()),
+        "payload_json": json.dumps(tampered_rec.raw_output)
+    })
+
+    tamp_score, _, _ = calculate_finding_risk("TAMPERING", "CRITICAL", 1.0, 1, 1)
+    repo.create_finding({
+        "finding_id": f"F-TAMP-{uuid.uuid4().hex[:6].upper()}",
+        "asset_type": "INFERENCE",
+        "asset_id": tamp_rec_id,
+        "category": "TAMPERING",
+        "severity": "CRITICAL",
+        "confidence": 1.0,
+        "risk_score": tamp_score,
+        "title": f"Inference Output Tampering Detected in Record {tamp_rec_id}",
+        "description": "Cryptographic hash binding verification failed on inference record payload.",
+        "evidence": json.dumps(tamp_verif.tamper_detected_in),
+        "affected_samples": json.dumps([tamp_rec_id]),
+        "detection_method": "SHA-256 Hash Binding & Ed25519 Digital Signature Verification",
+        "limitations": json.dumps([]),
+        "recommendation": "QUARANTINE"
+    })
+
+    repo.create_inference_record({
+        "record_id": replay_rec_id,
+        "input_sha256": replayed_rec.input_sha256,
+        "model_sha256": replayed_rec.model_sha256,
+        "preprocessing_sha256": replayed_rec.preprocessing_sha256,
+        "config_sha256": replayed_rec.config_sha256,
+        "output_sha256": replayed_rec.output_sha256,
+        "timestamp": replayed_rec.timestamp,
+        "nonce": replayed_rec.nonce,
+        "sequence": replayed_rec.sequence,
+        "record_hash": replayed_rec.record_hash,
+        "signature": replayed_rec.signature,
+        "public_key_hex": replayed_rec.public_key_hex,
+        "is_tampered": False,
+        "is_replayed": True,
+        "verification_status": "REPLAY_DETECTED",
+        "verification_details": json.dumps(replay_res),
+        "payload_json": json.dumps(replayed_rec.raw_output)
+    })
+
+    rep_score, _, _ = calculate_finding_risk("REPLAY", "CRITICAL", 1.0, 1, 1)
+    repo.create_finding({
+        "finding_id": f"F-REP-{uuid.uuid4().hex[:6].upper()}",
+        "asset_type": "INFERENCE",
+        "asset_id": replay_rec_id,
+        "category": "REPLAY",
+        "severity": "CRITICAL",
+        "confidence": 1.0,
+        "risk_score": rep_score,
+        "title": f"Inference Replay Attack Detected: Nonce Reuse in Record {replay_rec_id}",
+        "description": "Replay attack detection identified duplicate nonce and non-monotonic sequence counters.",
+        "evidence": json.dumps(replay_res["reasons"]),
+        "affected_samples": json.dumps([replay_rec_id]),
+        "detection_method": "Inference Nonce Registry & Monotonic Sequence Tracking",
+        "limitations": json.dumps([]),
+        "recommendation": "QUARANTINE"
+    })
+
     # -------------------------------------------------------------
     # STEP 8: Distribution Shift Evaluation
     # -------------------------------------------------------------
@@ -208,6 +561,84 @@ def run_full_assurance_demo():
     )
     print(f"  - Distribution shift classification: {shift_analysis['classification']}")
     print(f"  - Overall shift detected: {shift_analysis['overall_shift_detected']}")
+
+    ref_ds_id = "DS-REF-DOMAIN"
+    cand_ds_id = "DS-SHIFT-DOMAIN"
+    
+    repo.create_dataset({
+        "id": ref_ds_id,
+        "name": "Reference_Domain_YOLO",
+        "format": "YOLO",
+        "file_path": str(Path(shift_datasets["reference_zip"]).with_suffix("")),
+        "sample_count": len(ref_yolo),
+        "classes": json.dumps(["vehicle"]),
+        "status": "ANALYZED",
+        "risk_score": 0.0,
+        "disposition": "ACCEPT"
+    })
+    repo.add_samples([{
+        "dataset_id": ref_ds_id,
+        "sample_id": r.sample_id,
+        "image_path": str(Path(r.image_path).resolve()),
+        "source_id": "ref_domain",
+        "batch_id": "baseline_01",
+        "contributor": "calibrated_sensor",
+        "width": r.width,
+        "height": r.height,
+        "labels": json.dumps(r.labels),
+        "annotations": json.dumps(r.annotations),
+        "metadata_json": json.dumps(r.metadata),
+        "is_suspicious": False,
+        "anomaly_reasons": "[]"
+    } for r in ref_yolo])
+
+    repo.create_dataset({
+        "id": cand_ds_id,
+        "name": "Shifted_Domain_YOLO",
+        "format": "YOLO",
+        "file_path": str(Path(shift_datasets["candidate_zip"]).with_suffix("")),
+        "sample_count": len(cand_yolo),
+        "classes": json.dumps(["vehicle"]),
+        "status": "ANALYZED",
+        "risk_score": 75.0,
+        "disposition": "REVIEW"
+    })
+    repo.add_samples([{
+        "dataset_id": cand_ds_id,
+        "sample_id": r.sample_id,
+        "image_path": str(Path(r.image_path).resolve()),
+        "source_id": "shifted_domain",
+        "batch_id": "candidate_01",
+        "contributor": "degraded_sensor",
+        "width": r.width,
+        "height": r.height,
+        "labels": json.dumps(r.labels),
+        "annotations": json.dumps(r.annotations),
+        "metadata_json": json.dumps(r.metadata),
+        "is_suspicious": True,
+        "anomaly_reasons": json.dumps(["Significant environmental distribution drift (illumination/noise)"])
+    } for r in cand_yolo])
+
+    dist_score, _, dist_disp = calculate_finding_risk("DISTRIBUTION_SHIFT", shift_analysis["severity"], shift_analysis["confidence"], 1, 1)
+    repo.create_finding({
+        "finding_id": f"F-DIST-{cand_ds_id}-{ref_ds_id}",
+        "asset_type": "DATASET",
+        "asset_id": cand_ds_id,
+        "category": "DISTRIBUTION_SHIFT",
+        "severity": shift_analysis["severity"],
+        "confidence": shift_analysis["confidence"],
+        "risk_score": dist_score,
+        "title": f"Distribution Drift Detected: {shift_analysis['classification']}",
+        "description": shift_analysis["summary"],
+        "evidence": json.dumps([
+            f"Classification: {shift_analysis['classification']}",
+            f"Summary: {shift_analysis['summary']}"
+        ]),
+        "affected_samples": json.dumps([r.sample_id for r in cand_yolo[:10]]),
+        "detection_method": "Multi-Attribute PSI & Kolmogorov-Smirnov Statistical Testing",
+        "limitations": json.dumps(shift_analysis.get("limitations", [])),
+        "recommendation": shift_analysis["recommendation"]
+    })
 
     # -------------------------------------------------------------
     # STEP 9: Audit Trail Verification
@@ -227,6 +658,20 @@ def run_full_assurance_demo():
     csv_p = export_report_to_csv(report, settings.REPORT_DIR / "benchmark_findings.csv")
     print(f"  - Report generated: {report.report_id}")
     print(f"  - PDF saved: {pdf_p}")
+
+    # Persist report to database
+    repo.create_report({
+        "report_id": report.report_id,
+        "title": "VisionTrust AI Assurance & Integrity Assessment (Benchmark)",
+        "overall_risk_score": report.overall_risk_score,
+        "overall_disposition": report.overall_disposition,
+        "executive_summary": json.dumps(report.executive_summary),
+        "findings_summary": json.dumps({"findings_count": len(report.findings)}),
+        "full_report_json": report.model_dump_json(),
+        "pdf_path": str(Path(pdf_p).resolve()),
+        "json_path": str(Path(json_p).resolve()),
+        "csv_path": str(Path(csv_p).resolve())
+    })
 
     # -------------------------------------------------------------
     # STEP 11 & 12: Empirical Metrics Calculation

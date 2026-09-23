@@ -1,28 +1,28 @@
 {
-  "report_id": "REP-A56519D1A40F",
+  "report_id": "REP-15BD0B44A5D0",
   "title": "VisionTrust AI Assurance & Integrity Assessment",
-  "generated_at": "2026-09-23T16:11:23.933328+00:00",
-  "overall_risk_score": 0.0,
-  "overall_risk_level": "LOW",
-  "overall_disposition": "ACCEPT",
+  "generated_at": "2026-09-23T17:11:25.152390+00:00",
+  "overall_risk_score": 85.5,
+  "overall_risk_level": "CRITICAL",
+  "overall_disposition": "QUARANTINE",
   "executive_summary": {
-    "assessment_verdict": "ACCEPT",
-    "overall_risk_score": 0.0,
-    "overall_risk_level": "LOW",
-    "critical_findings": 0,
-    "high_findings": 0,
+    "assessment_verdict": "QUARANTINE",
+    "overall_risk_score": 85.5,
+    "overall_risk_level": "CRITICAL",
+    "critical_findings": 1,
+    "high_findings": 4,
     "medium_findings": 0,
     "low_findings": 0,
-    "explanation": "No integrity violations or anomalies detected."
+    "explanation": "Overall risk evaluated as CRITICAL (85.5/100) across 5 findings. Critical findings: 1, High findings: 4."
   },
   "dataset_assurance": {
     "dataset_id": "DS-BENCHMARK-01",
     "name": "Benchmark_Poisoned_Dataset",
     "format": "COCO",
     "sample_count": 49,
-    "annotation_count": 0,
-    "risk_score": 0.0,
-    "disposition": "ACCEPT",
+    "annotation_count": 49,
+    "risk_score": 85.5,
+    "disposition": "QUARANTINE",
     "classes": [
       "pedestrian",
       "sign",
@@ -33,16 +33,149 @@
     "status": "NO_MODEL_SELECTED"
   },
   "inference_assurance": {
-    "total_records_tracked": 10,
-    "tampered_records": 0,
-    "replayed_attempts": 0,
+    "total_records_tracked": 22,
+    "tampered_records": 3,
+    "replayed_attempts": 3,
     "cryptographic_algorithm": "SHA-256 + Ed25519"
   },
   "distribution_assurance": {
     "shift_events_recorded": 0,
     "recent_shift_classification": "NORMAL"
   },
-  "findings": [],
+  "findings": [
+    {
+      "finding_id": "F-DS-BENCHMARK-01-001",
+      "asset_type": "DATASET",
+      "asset_id": "DS-BENCHMARK-01",
+      "category": "NEAR_DUPLICATE",
+      "severity": "HIGH",
+      "confidence": 0.95,
+      "risk_score": 17.9,
+      "title": "Perceptual Near-Duplicate Flooding Detected (1 clusters)",
+      "description": "Perceptual hashing (pHash/dHash) identified 5 images forming near-identical visual clusters, indicating duplicate flooding.",
+      "evidence": [
+        "Detected 1 duplicate cluster(s) with similarity >= 0.95",
+        "Total duplicate samples: 5"
+      ],
+      "affected_samples": [
+        "sample_0040",
+        "sample_0039",
+        "sample_0037",
+        "sample_0036",
+        "sample_0038"
+      ],
+      "detection_method": "pHash & dHash Perceptual Hashing",
+      "limitations": [
+        "Severe non-linear warping or heavy crops may elude standard perceptual hashes."
+      ],
+      "recommendation": "ACCEPT",
+      "created_at": "2026-09-23T17:10:27.381100"
+    },
+    {
+      "finding_id": "F-DS-BENCHMARK-01-002",
+      "asset_type": "DATASET",
+      "asset_id": "DS-BENCHMARK-01",
+      "category": "LABEL_FLIP",
+      "severity": "HIGH",
+      "confidence": 0.92,
+      "risk_score": 29.2,
+      "title": "Systematic Mislabelling & Label Noise Detected (5 samples)",
+      "description": "Visual feature neighborhood consensus revealed samples whose assigned ground-truth label directly contradicts the consensus label of their nearest visual neighbors.",
+      "evidence": [
+        "5 samples conflict with nearest visual feature neighbors.",
+        "Affected sources: ['source_rogue_3']"
+      ],
+      "affected_samples": [
+        "sample_0034",
+        "sample_0032",
+        "sample_0031",
+        "sample_0033",
+        "sample_0035"
+      ],
+      "detection_method": "k-Nearest Neighbors (k=5) Feature Disagreement",
+      "limitations": [
+        "Relies on low-level statistical features; subtle semantic distinctions may exhibit overlap."
+      ],
+      "recommendation": "ACCEPT",
+      "created_at": "2026-09-23T17:10:27.394608"
+    },
+    {
+      "finding_id": "F-DS-BENCHMARK-01-003",
+      "asset_type": "DATASET",
+      "asset_id": "DS-BENCHMARK-01",
+      "category": "OOD",
+      "severity": "HIGH",
+      "confidence": 0.75,
+      "risk_score": 19.4,
+      "title": "Out-of-Distribution Inliers/Outliers Detected (4 samples)",
+      "description": "Isolation Forest modeling flagged samples exhibiting anomalous multivariate visual feature distributions outside the normal training manifold.",
+      "evidence": [
+        "4 samples exceeded anomaly threshold.",
+        "Overall OOD score: 0.37"
+      ],
+      "affected_samples": [
+        "sample_0044",
+        "sample_0043",
+        "sample_0042",
+        "sample_0041"
+      ],
+      "detection_method": "IsolationForest (Internal Population)",
+      "limitations": [
+        "Unsupervised density estimation without dedicated reference dataset."
+      ],
+      "recommendation": "ACCEPT",
+      "created_at": "2026-09-23T17:10:27.405412"
+    },
+    {
+      "finding_id": "F-DS-BENCHMARK-01-004",
+      "asset_type": "DATASET",
+      "asset_id": "DS-BENCHMARK-01",
+      "category": "TRIGGER",
+      "severity": "CRITICAL",
+      "confidence": 0.95,
+      "risk_score": 74.4,
+      "title": "Potential Visual Trigger / Backdoor Patch Identified (1 clusters)",
+      "description": "Spatial patch analysis identified repeated localized visual patterns sharing high cosine similarity and disproportionate correlation with specific target labels.",
+      "evidence": [
+        "Identified 1 localized trigger pattern cluster(s).",
+        "Affected samples: ['sample_0046', 'sample_0047', 'sample_0045', 'sample_0048', 'sample_0049']"
+      ],
+      "affected_samples": [
+        "sample_0046",
+        "sample_0047",
+        "sample_0045",
+        "sample_0048",
+        "sample_0049"
+      ],
+      "detection_method": "Multi-region Localized Patch Cosine Correlation",
+      "limitations": [
+        "Detects fixed spatial patches; subtle blended perturbations require white-box gradient attribution."
+      ],
+      "recommendation": "QUARANTINE",
+      "created_at": "2026-09-23T17:10:27.416049"
+    },
+    {
+      "finding_id": "F-DS-BENCHMARK-01-005",
+      "asset_type": "DATASET",
+      "asset_id": "DS-BENCHMARK-01",
+      "category": "SOURCE_POISONING",
+      "severity": "HIGH",
+      "confidence": 0.9,
+      "risk_score": 49.7,
+      "title": "Source/Contributor Poisoning Anomaly (2 sources flagged)",
+      "description": "Hierarchical risk aggregation identified specific data contributors or ingestion batches contributing disproportionate volumes of anomalous samples.",
+      "evidence": [
+        "Flagged poisoned sources: ['source_rogue_3', 'source_flood_2']"
+      ],
+      "affected_samples": [],
+      "detection_method": "Hierarchical Contributor & Batch Anomaly Rollup",
+      "limitations": [
+        "Requires contributor and source batch metadata in dataset records."
+      ],
+      "recommendation": "QUARANTINE",
+      "created_at": "2026-09-23T17:10:27.426625"
+    }
+  ],
   "coverage_matrix": [
     {
       "threat_id": "T1",
@@ -236,8 +369,8 @@
   },
   "assurance_summary": {
     "dataset_integrity": {
-      "status": "PASS",
-      "evidence": "0 verified integrity findings detected: systematic label inversions, perceptual duplicate flooding, out-of-distribution noise, and localized patch triggers.",
+      "status": "EVALUATED_ANOMALIES_DETECTED",
+      "evidence": "2 verified integrity findings detected: systematic label inversions, perceptual duplicate flooding, out-of-distribution noise, and localized patch triggers.",
       "confidence": 0.95,
       "limitations": "Statistical heuristics; steganographic triggers with zero pixel deviations require gradient attribution.",
       "recommendation": "Quarantine affected rogue sources (e.g. source_rogue_3, source_flood_2) and filter anomalous samples."
@@ -251,7 +384,7 @@
     },
     "inference_integrity": {
       "status": "PASS",
-      "evidence": "Ed25519 digital signature and SHA-256 binding verified across 10 records. Tampered output payload detected via hash mismatch. Replay attempt detected via duplicate nonce.",
+      "evidence": "Ed25519 digital signature and SHA-256 binding verified across 22 records. Tampered output payload detected via hash mismatch. Replay attempt detected via duplicate nonce.",
       "confidence": 1.0,
       "limitations": "Cryptographic validity proves record integrity, not prediction correctness.",
       "recommendation": "Maintain monotonic sequence tracking and reject non-verifiable inference payloads."
