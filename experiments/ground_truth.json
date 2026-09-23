@@ -1,0 +1,65 @@
+{
+  "total_samples": 49,
+  "clean_samples": [
+    "sample_0001",
+    "sample_0002",
+    "sample_0003",
+    "sample_0004",
+    "sample_0005",
+    "sample_0006",
+    "sample_0007",
+    "sample_0008",
+    "sample_0009",
+    "sample_0010",
+    "sample_0011",
+    "sample_0012",
+    "sample_0013",
+    "sample_0014",
+    "sample_0015",
+    "sample_0016",
+    "sample_0017",
+    "sample_0018",
+    "sample_0019",
+    "sample_0020",
+    "sample_0021",
+    "sample_0022",
+    "sample_0023",
+    "sample_0024",
+    "sample_0025",
+    "sample_0026",
+    "sample_0027",
+    "sample_0028",
+    "sample_0029",
+    "sample_0030"
+  ],
+  "label_flip_samples": [
+    "sample_0031",
+    "sample_0032",
+    "sample_0033",
+    "sample_0034",
+    "sample_0035"
+  ],
+  "duplicate_flooding_samples": [
+    "sample_0036",
+    "sample_0037",
+    "sample_0038",
+    "sample_0039",
+    "sample_0040"
+  ],
+  "ood_samples": [
+    "sample_0041",
+    "sample_0042",
+    "sample_0043",
+    "sample_0044"
+  ],
+  "trigger_samples": [
+    "sample_0045",
+    "sample_0046",
+    "sample_0047",
+    "sample_0048",
+    "sample_0049"
+  ],
+  "poisoned_sources": [
+    "source_rogue_3"
+  ]
+}

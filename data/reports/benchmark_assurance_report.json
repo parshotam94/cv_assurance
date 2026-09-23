@@ -1,0 +1,150 @@
+{
+  "report_id": "REP-C2F09027B476",
+  "title": "VisionTrust AI Assurance & Integrity Assessment",
+  "generated_at": "2026-09-22T08:55:13.998346+00:00",
+  "overall_risk_score": 0.0,
+  "overall_risk_level": "LOW",
+  "overall_disposition": "ACCEPT",
+  "executive_summary": {
+    "assessment_verdict": "ACCEPT",
+    "overall_risk_score": 0.0,
+    "overall_risk_level": "LOW",
+    "critical_findings": 0,
+    "high_findings": 0,
+    "medium_findings": 0,
+    "low_findings": 0,
+    "explanation": "No integrity violations or anomalies detected."
+  },
+  "dataset_assurance": {
+    "dataset_id": "DS-BENCHMARK-01",
+    "name": "Benchmark_Poisoned_Dataset",
+    "format": "COCO",
+    "sample_count": 49,
+    "annotation_count": 0,
+    "risk_score": 0.0,
+    "disposition": "ACCEPT",
+    "classes": [
+      "pedestrian",
+      "sign",
+      "vehicle"
+    ]
+  },
+  "model_assurance": {
+    "status": "NO_MODEL_SELECTED"
+  },
+  "inference_assurance": {
+    "total_records_tracked": 1,
+    "tampered_records": 0,
+    "replayed_attempts": 0,
+    "cryptographic_algorithm": "SHA-256 + Ed25519"
+  },
+  "distribution_assurance": {
+    "shift_events_recorded": 0,
+    "recent_shift_classification": "NORMAL"
+  },
+  "findings": [],
+  "coverage_matrix": [
+    {
+      "threat_id": "T1",
+      "capability": "Label Flipping Detection",
+      "supported_status": "SUPPORTED",
+      "access_requirement": "Dataset Labels + Images",
+      "primary_method": "Feature k-NN neighborhood consensus & imbalance analysis",
+      "key_limitation": "Requires distinct feature cluster separation between classes."
+    },
+    {
+      "threat_id": "T2",
+      "capability": "Systematic Mislabelling",
+      "supported_status": "SUPPORTED",
+      "access_requirement": "Dataset Metadata + Labels",
+      "primary_method": "Hierarchical contributor & batch anomaly rollup",
+      "key_limitation": "Effectiveness depends on presence of source/batch annotations."
+    },
+    {
+      "threat_id": "T3",
+      "capability": "Duplicate Flooding",
+      "supported_status": "SUPPORTED",
+      "access_requirement": "Image Files (Black-Box)",
+      "primary_method": "Perceptual Hashing (pHash, dHash) Hamming distance clustering",
+      "key_limitation": "Sensitivity tuned via threshold; heavily transformed images may escape."
+    },
+    {
+      "threat_id": "T4",
+      "capability": "Out-of-Distribution (OOD) Injection",
+      "supported_status": "SUPPORTED",
+      "access_requirement": "Dataset or Reference Baseline",
+      "primary_method": "Isolation Forest & statistical feature distribution distances",
+      "key_limitation": "High-dimensional semantic outliers require reference baseline."
+    },
+    {
+      "threat_id": "T5",
+      "capability": "Trigger / Backdoor Injection",
+      "supported_status": "PARTIALLY_SUPPORTED",
+      "access_requirement": "Dataset Images",
+      "primary_method": "Localized patch spatial consistency & class correlation search",
+      "key_limitation": "Blended or frequency-domain watermarks require gradient-based attribution."
+    },
+    {
+      "threat_id": "T6",
+      "capability": "Model Substitution",
+      "supported_status": "SUPPORTED",
+      "access_requirement": "Model File (.onnx, .pt, .pth, .ts)",
+      "primary_method": "Cryptographic SHA-256 identity & parameter count verification",
+      "key_limitation": "Requires trusted reference fingerprint for comparison."
+    },
+    {
+      "threat_id": "T7",
+      "capability": "Model Weight Modification",
+      "supported_status": "SUPPORTED",
+      "access_requirement": "Model Weights (White-Box / Gray-Box)",
+      "primary_method": "Tensor statistics, layer shapes, and mean L2-norm fingerprinting",
+      "key_limitation": "External weights or opaque black-box runtimes degrade capability."
+    },
+    {
+      "threat_id": "T8",
+      "capability": "Backdoor Behaviour Testing",
+      "supported_status": "SUPPORTED",
+      "access_requirement": "Inference Execution (Black-Box)",
+      "primary_method": "Controlled perturbation battery (brightness, noise, patch collapse)",
+      "key_limitation": "Cannot prove absence of dormant triggers without trigger inversion."
+    },
+    {
+      "threat_id": "T9",
+      "capability": "Inference Record Tampering",
+      "supported_status": "SUPPORTED",
+      "access_requirement": "Full Record Payload",
+      "primary_method": "Cryptographic hash binding + Ed25519 digital signatures",
+      "key_limitation": "Protects recorded inferences; requires secure local key storage."
+    },
+    {
+      "threat_id": "T10",
+      "capability": "Inference Replay Attacks",
+      "supported_status": "SUPPORTED",
+      "access_requirement": "Inference Log State",
+      "primary_method": "Cryptographic nonces, monotonic sequence checks, timestamp skews",
+      "key_limitation": "Requires database persistence of past nonce records."
+    },
+    {
+      "threat_id": "T11",
+      "capability": "Provenance Configuration Substitution",
+      "supported_status": "SUPPORTED",
+      "access_requirement": "Provenance Metadata",
+      "primary_method": "Canonical JSON serialization hashing for preprocessing & runtime config",
+      "key_limitation": "Config schema changes must remain backward-compatible."
+    },
+    {
+      "threat_id": "T12",
+      "capability": "Distribution Shift & Drift",
+      "supported_status": "SUPPORTED",
+      "access_requirement": "Reference & Candidate Populations",
+      "primary_method": "PSI, 2-sample KS test, Wasserstein distance, environmental categorization",
+      "key_limitation": "Requires sufficient sample volume (N >= 20) for statistical significance."
+    }
+  ],
+  "system_limitations": [
+    "Framework runs 100% locally and does not transmit data or consult cloud foundation models.",
+    "Statistical heuristics cannot mathematically prove total absence of steganographic or adversarial latent triggers.",
+    "Model weight analysis on ONNX models depends on initializers embedded within the graph file.",
+    "Offline cryptographic protection guarantees tamper-evident provenance but assumes private key is stored securely in air-gapped host."
+  ]
+}
