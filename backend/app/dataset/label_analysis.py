@@ -104,9 +104,9 @@ def analyze_labels_and_mislabelling(
             
             disagreement_rate = 1.0 - (neighbor_counts.get(current_label, 0) / k)
 
-            if disagreement_rate >= 0.8 and most_common_neighbor_label != current_label:
-                # Strong disagreement between feature neighborhood and label
-                confidence = "HIGH" if disagreement_rate == 1.0 else "MEDIUM"
+            if disagreement_rate >= 0.6 and most_common_neighbor_label != current_label:
+                # Disagreement between feature neighborhood and label
+                confidence = "HIGH" if disagreement_rate >= 0.8 else "MEDIUM"
                 suspicious_samples.append({
                     "sample_id": rec.sample_id,
                     "image_path": rec.image_path,

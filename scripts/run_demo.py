@@ -15,6 +15,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from backend.app.config import settings
 from backend.app.database.database import SessionLocal, init_db
 from backend.app.database.repository import Repository
+from backend.app.database.models import DatasetModel, DatasetSampleModel, DatasetSourceModel, InferenceRecordModel, FindingModel
 from backend.app.core.audit import log_audit_event, verify_audit_chain
 from experiments.create_demo_model import create_demo_models
 from experiments.generate_poisoned_data import generate_poisoned_experiment_dataset
@@ -75,6 +76,13 @@ def run_full_assurance_demo():
     print(f"  - Validated records: {len(valid_records)} (Issues: {len(validation_issues)})")
 
     dataset_id = "DS-BENCHMARK-01"
+    # Ensure idempotency by deleting any previous benchmark records
+    db.query(DatasetSampleModel).filter(DatasetSampleModel.dataset_id == dataset_id).delete()
+    db.query(DatasetSourceModel).filter(DatasetSourceModel.dataset_id == dataset_id).delete()
+    db.query(FindingModel).filter(FindingModel.asset_id == dataset_id).delete()
+    db.query(DatasetModel).filter(DatasetModel.id == dataset_id).delete()
+    db.commit()
+
     repo.create_dataset({
         "id": dataset_id,
         "name": "Benchmark_Poisoned_Dataset",
@@ -160,7 +168,9 @@ def run_full_assurance_demo():
     tamp_verif = verify_provenance_record(tampered_rec, current_output_data=tampered_rec.raw_output)
     print(f"  - Tampered inference record: {tamp_verif.status} (Detected in: {tamp_verif.tamper_detected_in})")
 
-    # Persist clean record for replay check
+    # Persist clean record for replay check (ensure idempotency)
+    db.query(InferenceRecordModel).filter(InferenceRecordModel.record_id == clean_rec.record_id).delete()
+    db.commit()
     repo.create_inference_record({
         "record_id": clean_rec.record_id,
         "input_sha256": clean_rec.input_sha256,

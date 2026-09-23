@@ -36,6 +36,9 @@ def extract_patch_signatures(img_path: str, patch_size: int = 16) -> Dict[str, n
             }
 
             for loc, patch in regions.items():
+                # Skip flat / uniform background patches (not anomalous triggers)
+                if np.std(patch) < 0.05:
+                    continue
                 # Normalized color + gradient signature of patch
                 flat_patch = patch.flatten()
                 norm = np.linalg.norm(flat_patch)

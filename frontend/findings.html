@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VisionTrust Assurance | Assurance Findings</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  <aside class="app-sidebar">
+    <div class="brand-section">
+      <div class="brand-logo">VT</div>
+      <div class="brand-text">
+        <h1>VisionTrust</h1>
+        <p>Assurance Core</p>
+      </div>
+    </div>
+    <ul class="nav-links">
+      <li class="nav-item"><a href="/index.html"><span class="nav-icon">■</span><span class="nav-text">Dashboard</span></a></li>
+      <li class="nav-item"><a href="/datasets.html"><span class="nav-icon">◈</span><span class="nav-text">Datasets</span></a></li>
+      <li class="nav-item"><a href="/models.html"><span class="nav-icon">◆</span><span class="nav-text">Models</span></a></li>
+      <li class="nav-item"><a href="/inference.html"><span class="nav-icon">▶</span><span class="nav-text">Inference & Provenance</span></a></li>
+      <li class="nav-item active"><a href="/findings.html"><span class="nav-icon">▲</span><span class="nav-text">Findings</span></a></li>
+      <li class="nav-item"><a href="/audit.html"><span class="nav-icon">⛓</span><span class="nav-text">Audit Trail</span></a></li>
+      <li class="nav-item"><a href="/reports.html"><span class="nav-icon">▤</span><span class="nav-text">Assurance Reports</span></a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div>VisionTrust v1.0.0</div>
+      <div class="air-gap-badge">AIR-GAPPED OFFLINE</div>
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="app-header">
+      <div class="page-title-area">
+        <h2>Assurance Findings & Evidence Explorer</h2>
+        <p>Explainable Vulnerability Attribution, Evidence Chains & Actionable Dispositions</p>
+      </div>
+    </header>
+
+    <main class="content-container">
+      <!-- Filter Bar -->
+      <section class="card" style="margin-bottom: 2rem; padding: 1rem 1.5rem;">
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 180px;">
+            <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Severity Filter</label>
+            <select id="filter-severity" class="form-control" style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
+              <option value="">All Severities</option>
+              <option value="CRITICAL">CRITICAL</option>
+              <option value="HIGH">HIGH</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="LOW">LOW</option>
+            </select>
+          </div>
+          <div style="flex: 1; min-width: 180px;">
+            <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Category Filter</label>
+            <select id="filter-category" class="form-control" style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
+              <option value="">All Categories</option>
+              <option value="LABEL_FLIP">Label Flip / Mislabelling</option>
+              <option value="NEAR_DUPLICATE">Near-Duplicate Flooding</option>
+              <option value="OOD">Out-of-Distribution</option>
+              <option value="TRIGGER">Trigger / Backdoor</option>
+              <option value="MODEL_SUBSTITUTION">Model Substitution</option>
+              <option value="BACKDOOR_BEHAVIOUR">Behavioural Disagreement</option>
+              <option value="TAMPERING">Inference Tampering</option>
+              <option value="REPLAY">Inference Replay</option>
+              <option value="DISTRIBUTION_SHIFT">Distribution Shift</option>
+            </select>
+          </div>
+          <div style="flex: 1; min-width: 180px;">
+            <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Asset ID</label>
+            <input type="text" id="filter-asset" class="form-control" placeholder="Search Asset ID..." style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
+          </div>
+        </div>
+      </section>
+
+      <!-- Findings Table -->
+      <section class="table-container">
+        <div class="table-header-bar">
+          <h3>Identified Assurance Findings</h3>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Asset</th>
+              <th>Category</th>
+              <th>Severity</th>
+              <th>Confidence</th>
+              <th>Risk Score</th>
+              <th>Title</th>
+              <th>Recommendation</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="findings-tbody">
+            <tr>
+              <td colspan="9" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading findings...</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <!-- Slide-in Evidence Drawer -->
+  <div id="drawer-overlay" class="drawer-overlay"></div>
+  <aside id="evidence-drawer" class="drawer">
+    <div class="drawer-header">
+      <div>
+        <h3 id="drawer-title" style="font-size: 1.1rem; color: #fff;">Finding Detail</h3>
+        <p id="drawer-subtitle" style="font-size: 0.75rem; color: var(--text-dim);"></p>
+      </div>
+      <button id="btn-close-drawer" class="drawer-close">&times;</button>
+    </div>
+    <div class="drawer-body">
+      <div style="margin-bottom: 1.25rem;">
+        <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Description</label>
+        <p id="drawer-desc" style="font-size: 0.88rem; color: #cbd5e1; margin-top: 0.25rem;"></p>
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Detection Methodology</label>
+        <p id="drawer-method" style="font-size: 0.85rem; color: var(--accent-cyan); margin-top: 0.25rem;"></p>
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Empirical Evidence & Telemetry</label>
+        <div id="drawer-evidence" class="evidence-block"></div>
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Affected Sample Identifiers</label>
+        <div id="drawer-samples" class="evidence-block" style="max-height: 120px; overflow-y: auto;"></div>
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Technical Limitations & Assumptions</label>
+        <div id="drawer-limitations" class="evidence-block"></div>
+      </div>
+
+      <div style="background: var(--bg-input); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color);">
+        <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Actionable Disposition</label>
+        <div id="drawer-rec" style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-top: 0.25rem;"></div>
+      </div>
+    </div>
+  </aside>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script type="module" src="/static/js/findings.js"></script>
+</body>
+</html>

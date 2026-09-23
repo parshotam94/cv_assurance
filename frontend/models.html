@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VisionTrust Assurance | Model Integrity</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  <aside class="app-sidebar">
+    <div class="brand-section">
+      <div class="brand-logo">VT</div>
+      <div class="brand-text">
+        <h1>VisionTrust</h1>
+        <p>Assurance Core</p>
+      </div>
+    </div>
+    <ul class="nav-links">
+      <li class="nav-item"><a href="/index.html"><span class="nav-icon">■</span><span class="nav-text">Dashboard</span></a></li>
+      <li class="nav-item"><a href="/datasets.html"><span class="nav-icon">◈</span><span class="nav-text">Datasets</span></a></li>
+      <li class="nav-item active"><a href="/models.html"><span class="nav-icon">◆</span><span class="nav-text">Models</span></a></li>
+      <li class="nav-item"><a href="/inference.html"><span class="nav-icon">▶</span><span class="nav-text">Inference & Provenance</span></a></li>
+      <li class="nav-item"><a href="/findings.html"><span class="nav-icon">▲</span><span class="nav-text">Findings</span></a></li>
+      <li class="nav-item"><a href="/audit.html"><span class="nav-icon">⛓</span><span class="nav-text">Audit Trail</span></a></li>
+      <li class="nav-item"><a href="/reports.html"><span class="nav-icon">▤</span><span class="nav-text">Assurance Reports</span></a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div>VisionTrust v1.0.0</div>
+      <div class="air-gap-badge">AIR-GAPPED OFFLINE</div>
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="app-header">
+      <div class="page-title-area">
+        <h2>Model Assurance & Cryptographic Integrity</h2>
+        <p>Model Substitution, Parameter Drift, Behavioural Divergence & Trigger Sensitivity</p>
+      </div>
+    </header>
+
+    <main class="content-container">
+      <!-- Upload Model Card -->
+      <section class="card" style="margin-bottom: 2rem;">
+        <div class="card-title">Register Model Binary (.onnx, .pt, .pth, .ts)</div>
+        <form id="upload-model-form">
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: center;">
+            <div class="dropzone" id="model-dropzone">
+              <input type="file" id="model-file-input" accept=".onnx,.pt,.pth,.ts" required>
+              <div class="dropzone-icon">◆</div>
+              <div style="font-weight: 600;" id="dropzone-model-name">Drag & drop model file or click to select</div>
+              <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem;">Supports ONNX Runtime and PyTorch TorchScript / State Dicts</div>
+            </div>
+            <div>
+              <div class="form-group">
+                <label for="model-name-input">Model Label / Version</label>
+                <input type="text" id="model-name-input" class="form-control" placeholder="e.g. YOLOv8_Pedestrian_v1">
+              </div>
+              <button type="submit" id="btn-upload-model" class="btn btn-primary" style="width: 100%;">
+                Inspect & Register Model
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- Models Table -->
+      <section class="table-container">
+        <div class="table-header-bar">
+          <h3>Registered Models</h3>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Framework</th>
+              <th>SHA-256 Identity</th>
+              <th>Params</th>
+              <th>Access Level</th>
+              <th>Status</th>
+              <th>Risk Score</th>
+              <th>Disposition</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="models-tbody">
+            <tr>
+              <td colspan="10" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading registered models...</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Model Evaluation Panel -->
+      <section id="model-analysis-panel" class="card" style="display: none; margin-bottom: 2rem;">
+        <div class="card-title" style="display: flex; justify-content: space-between;">
+          <span>Model Assurance Results: <span id="res-model-id" style="color: var(--accent-cyan);"></span></span>
+          <span id="res-model-disposition"></span>
+        </div>
+
+        <div class="grid-cards" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+          <div class="card" style="background: var(--bg-input);">
+            <div class="card-title">Substitution Status</div>
+            <div class="card-value" id="res-sub-status" style="font-size: 1.25rem;">N/A</div>
+            <div class="card-sub" id="res-sub-detail">No reference model used</div>
+          </div>
+          <div class="card" style="background: var(--bg-input);">
+            <div class="card-title">Behavioural Agreement</div>
+            <div class="card-value" id="res-battery-agreement">N/A</div>
+            <div class="card-sub" id="res-battery-tests">Perturbation Battery</div>
+          </div>
+          <div class="card" style="background: var(--bg-input);">
+            <div class="card-title">Trigger Sensitivity</div>
+            <div class="card-value" id="res-trigger-sens" style="font-size: 1.25rem;">N/A</div>
+            <div class="card-sub" id="res-trigger-conf">Localized Checkerboard</div>
+          </div>
+        </div>
+
+        <!-- Fingerprint summary -->
+        <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--text-muted); text-transform: uppercase;">
+          Cryptographic Fingerprint & Layer Attribution
+        </h4>
+        <div class="evidence-block" id="model-fp-evidence"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script type="module" src="/static/js/models.js"></script>
+</body>
+</html>

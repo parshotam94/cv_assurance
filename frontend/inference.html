@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VisionTrust Assurance | Inference Provenance & Tamper Testing</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  <aside class="app-sidebar">
+    <div class="brand-section">
+      <div class="brand-logo">VT</div>
+      <div class="brand-text">
+        <h1>VisionTrust</h1>
+        <p>Assurance Core</p>
+      </div>
+    </div>
+    <ul class="nav-links">
+      <li class="nav-item"><a href="/index.html"><span class="nav-icon">■</span><span class="nav-text">Dashboard</span></a></li>
+      <li class="nav-item"><a href="/datasets.html"><span class="nav-icon">◈</span><span class="nav-text">Datasets</span></a></li>
+      <li class="nav-item"><a href="/models.html"><span class="nav-icon">◆</span><span class="nav-text">Models</span></a></li>
+      <li class="nav-item active"><a href="/inference.html"><span class="nav-icon">▶</span><span class="nav-text">Inference & Provenance</span></a></li>
+      <li class="nav-item"><a href="/findings.html"><span class="nav-icon">▲</span><span class="nav-text">Findings</span></a></li>
+      <li class="nav-item"><a href="/audit.html"><span class="nav-icon">⛓</span><span class="nav-text">Audit Trail</span></a></li>
+      <li class="nav-item"><a href="/reports.html"><span class="nav-icon">▤</span><span class="nav-text">Assurance Reports</span></a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div>VisionTrust v1.0.0</div>
+      <div class="air-gap-badge">AIR-GAPPED OFFLINE</div>
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="app-header">
+      <div class="page-title-area">
+        <h2>Cryptographic Inference Provenance</h2>
+        <p>Ed25519 Canonical Signing, SHA-256 Hash Binding, Tamper Detection & Replay Prevention</p>
+      </div>
+    </header>
+
+    <main class="content-container">
+      <!-- Run Inference Form -->
+      <section class="card" style="margin-bottom: 2rem;">
+        <div class="card-title">Execute Signed Inference with Provenance Generation</div>
+        <form id="run-inference-form">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div>
+              <div class="form-group">
+                <label for="select-inference-model">Target Computer-Vision Model</label>
+                <select id="select-inference-model" class="form-control" required>
+                  <option value="">Select registered model...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="inference-image-input">Input Image (.jpg, .png)</label>
+                <input type="file" id="inference-image-input" class="form-control" accept="image/*" required>
+              </div>
+              <button type="submit" id="btn-run-inference" class="btn btn-primary" style="width: 100%;">
+                Run Inference & Generate Provenance Record
+              </button>
+            </div>
+            <div>
+              <div style="font-size: 0.82rem; color: var(--text-dim); margin-bottom: 0.5rem;">Cryptographic Binding Pipeline:</div>
+              <ul style="font-size: 0.8rem; color: var(--text-muted); list-style: disc; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.35rem;">
+                <li>SHA-256 hash calculated over binary input image bytes</li>
+                <li>SHA-256 hash bound to model binary identity</li>
+                <li>Preprocessing & runtime inference configs normalized via canonical JSON</li>
+                <li>Monotonic sequence increment & cryptographic high-entropy nonce</li>
+                <li>Offline Ed25519 digital signature generated over root record hash</li>
+              </ul>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- Active Record & Tamper / Replay Simulation -->
+      <section id="provenance-active-panel" class="card" style="display: none; margin-bottom: 2rem;">
+        <div class="card-title" style="display: flex; justify-content: space-between;">
+          <span>Active Provenance Record: <code id="active-rec-id" style="color: var(--accent-cyan);"></code></span>
+          <span id="active-rec-badge" class="badge badge-low">VERIFIED</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+          <div>
+            <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">
+              Canonical Provenance Record Payload
+            </h4>
+            <div class="evidence-block" id="active-record-json" style="max-height: 250px; overflow-y: auto;"></div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+              <button id="btn-verify-active" class="btn btn-secondary btn-sm">
+                Verify Ed25519 Signature
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">
+              Adversarial Attack Simulations
+            </h4>
+            <div style="background: var(--bg-input); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 1rem;">
+              <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem;">Simulate Payload / Model Hash Tampering</div>
+              <div style="display: flex; gap: 0.5rem;">
+                <select id="select-tamper-field" class="form-control" style="font-size: 0.8rem;">
+                  <option value="output">Output Predictions (mutate class/confidence)</option>
+                  <option value="model_hash">Model Identity SHA-256 (substitution)</option>
+                  <option value="timestamp">Timestamp (time warping)</option>
+                  <option value="signature">Signature (corrupt cryptographic signature)</option>
+                </select>
+                <button id="btn-tamper-test" class="btn btn-danger btn-sm">Tamper</button>
+              </div>
+            </div>
+
+            <div style="background: var(--bg-input); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color);">
+              <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.4rem;">Simulate Replay Attack</div>
+              <p style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 0.5rem;">Submits the identical signed record into the verification engine again.</p>
+              <button id="btn-replay-test" class="btn btn-danger btn-sm" style="width: 100%;">
+                Submit Duplicate Replay
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tracked Records Table -->
+      <section class="table-container">
+        <div class="table-header-bar">
+          <h3>Tracked Provenance Records</h3>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Record ID</th>
+              <th>Seq</th>
+              <th>Model Hash</th>
+              <th>Input Hash</th>
+              <th>Timestamp</th>
+              <th>Status</th>
+              <th>Tampered</th>
+              <th>Replayed</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inference-records-tbody">
+            <tr>
+              <td colspan="9" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading provenance records...</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+  <script type="module" src="/static/js/inference.js"></script>
+</body>
+</html>

@@ -18,29 +18,40 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 from backend.app.config import settings
 
-def draw_synthetic_scene(cls_name: str, size=(128, 128)) -> Image.Image:
-    """Render a deterministic synthetic computer vision object scene."""
-    im = Image.new("RGB", size, color=(40, 50, 60))
+def draw_synthetic_scene(cls_name: str, size=(128, 128), variation_seed=None) -> Image.Image:
+    """Render a deterministic synthetic computer vision object scene with controlled diversity."""
+    if variation_seed is not None:
+        rng = np.random.RandomState(variation_seed)
+        bg_col = (int(rng.randint(30, 60)), int(rng.randint(40, 70)), int(rng.randint(50, 80)))
+        x_off = int(rng.randint(-8, 9))
+        y_off = int(rng.randint(-6, 7))
+        col_mod = int(rng.randint(-15, 16))
+    else:
+        bg_col = (40, 50, 60)
+        x_off, y_off = 0, 0
+        col_mod = 0
+
+    im = Image.new("RGB", size, color=bg_col)
     draw = ImageDraw.Draw(im)
 
     if cls_name == "vehicle":
-        # Blue rectangle + wheels
-        draw.rectangle([20, 60, 108, 90], fill=(30, 100, 220))
-        draw.rectangle([40, 40, 90, 60], fill=(70, 140, 240))
-        draw.ellipse([30, 85, 45, 100], fill=(20, 20, 20))
-        draw.ellipse([85, 85, 100, 100], fill=(20, 20, 20))
+        b_c = max(10, min(255, 220 + col_mod))
+        draw.rectangle([20 + x_off, 60 + y_off, 108 + x_off, 90 + y_off], fill=(30, 100, b_c))
+        draw.rectangle([40 + x_off, 40 + y_off, 90 + x_off, 60 + y_off], fill=(70, 140, min(255, b_c + 20)))
+        draw.ellipse([30 + x_off, 85 + y_off, 45 + x_off, 100 + y_off], fill=(20, 20, 20))
+        draw.ellipse([85 + x_off, 85 + y_off, 100 + x_off, 100 + y_off], fill=(20, 20, 20))
     elif cls_name == "pedestrian":
-        # Orange vertical humanoid
-        draw.ellipse([58, 25, 70, 37], fill=(230, 120, 40))
-        draw.rectangle([54, 38, 74, 80], fill=(200, 90, 30))
-        draw.line([58, 80, 54, 110], fill=(150, 70, 20), width=3)
-        draw.line([70, 80, 74, 110], fill=(150, 70, 20), width=3)
+        o_c = max(10, min(255, 230 + col_mod))
+        draw.ellipse([58 + x_off, 25 + y_off, 70 + x_off, 37 + y_off], fill=(o_c, 120, 40))
+        draw.rectangle([54 + x_off, 38 + y_off, 74 + x_off, 80 + y_off], fill=(max(0, o_c - 30), 90, 30))
+        draw.line([58 + x_off, 80 + y_off, 54 + x_off, 110 + y_off], fill=(150, 70, 20), width=3)
+        draw.line([70 + x_off, 80 + y_off, 74 + x_off, 110 + y_off], fill=(150, 70, 20), width=3)
     elif cls_name == "sign":
-        # Red stop-like octagon or triangle
-        draw.polygon([(64, 30), (95, 55), (95, 85), (64, 105), (33, 85), (33, 55)], fill=(220, 40, 40))
-        draw.rectangle([61, 105, 67, 125], fill=(180, 180, 180))
+        r_c = max(10, min(255, 220 + col_mod))
+        draw.polygon([(64 + x_off, 30 + y_off), (95 + x_off, 55 + y_off), (95 + x_off, 85 + y_off), (64 + x_off, 105 + y_off), (33 + x_off, 85 + y_off), (33 + x_off, 55 + y_off)], fill=(r_c, 40, 40))
+        draw.rectangle([61 + x_off, 105 + y_off, 67 + x_off, 125 + y_off], fill=(180, 180, 180))
     else:
-        draw.rectangle([30, 30, 98, 98], fill=(100, 100, 100))
+        draw.rectangle([30 + x_off, 30 + y_off, 98 + x_off, 98 + y_off], fill=(100, 100, 100))
 
     return im
 
@@ -76,10 +87,10 @@ def generate_poisoned_experiment_dataset() -> Dict[str, Any]:
     for c_idx, c_name in enumerate(classes):
         for k in range(10):
             sid = f"sample_{sample_idx:04d}"
-            im = draw_synthetic_scene(c_name)
+            im = draw_synthetic_scene(c_name, variation_seed=100 + sample_idx)
             # Add slight background variation
             arr = np.array(im, dtype=np.int16)
-            arr = np.clip(arr + np.random.randint(-15, 15, arr.shape), 0, 255).astype(np.uint8)
+            arr = np.clip(arr + np.random.randint(-10, 10, arr.shape), 0, 255).astype(np.uint8)
             im_var = Image.fromarray(arr)
 
             fname = f"{sid}.jpg"
