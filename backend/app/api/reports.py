@@ -115,5 +115,13 @@ def download_report(report_id: str, fmt: str, db: Session = Depends(get_db)):
         return FileResponse(r.json_path, media_type="application/json", filename=f"{report_id}_assurance.json")
     elif fmt_lower == "csv" and r.csv_path and Path(r.csv_path).exists():
         return FileResponse(r.csv_path, media_type="text/csv", filename=f"{report_id}_findings.csv")
-    else:
-        raise HTTPException(status_code=400, detail=f"Invalid format or file not found for '{fmt}'.")
+@router.get("/charts/{chart_name}")
+def get_chart_image(chart_name: str):
+    """Serve generated data-science chart image file."""
+    if not chart_name.endswith(".png"):
+        chart_name = f"{chart_name}.png"
+    p = settings.CHART_DIR / chart_name
+    if not p.exists():
+        raise HTTPException(status_code=404, detail="Chart not found")
+    return FileResponse(p, media_type="image/png")
+

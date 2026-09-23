@@ -23,6 +23,8 @@
       <li class="nav-item"><a href="/findings.html"><span class="nav-icon">▲</span><span class="nav-text">Findings</span></a></li>
       <li class="nav-item"><a href="/audit.html"><span class="nav-icon">⛓</span><span class="nav-text">Audit Trail</span></a></li>
       <li class="nav-item active"><a href="/reports.html"><span class="nav-icon">▤</span><span class="nav-text">Assurance Reports</span></a></li>
+      <li class="nav-item"><a href="/compliance.html"><span class="nav-icon">✓</span><span class="nav-text">Compliance Audit</span></a></li>
+      <li class="nav-item"><a href="/guide.html"><span class="nav-icon">?</span><span class="nav-text">Evaluation Guide</span></a></li>
     </ul>
     <div class="sidebar-footer">
       <div>VisionTrust v1.0.0</div>
@@ -89,6 +91,66 @@
             </tr>
           </tbody>
         </table>
+      </section>
+
+      <!-- Empirical Visualizations Gallery -->
+      <section class="panel-section" style="margin-top: 2rem;">
+        <div class="panel-header">
+          <div>
+            <h3>Empirical Data-Science Visualizations</h3>
+            <p class="panel-sub">100% locally computed analytics embedded directly into assurance PDF dossiers</p>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.25rem; margin-top: 1rem;">
+          <div class="card" style="padding: 12px;">
+            <div class="card-title" style="margin-bottom: 8px;">1. Attack Detection Performance</div>
+            <img src="/api/reports/charts/attack_detection_performance" alt="Attack Performance" style="width: 100%; border-radius: 4px; display: block;" onerror="this.style.display='none'">
+          </div>
+          <div class="card" style="padding: 12px;">
+            <div class="card-title" style="margin-bottom: 8px;">2. Threat Confusion Matrix</div>
+            <img src="/api/reports/charts/confusion_matrix" alt="Confusion Matrix" style="width: 100%; border-radius: 4px; display: block;" onerror="this.style.display='none'">
+          </div>
+          <div class="card" style="padding: 12px;">
+            <div class="card-title" style="margin-bottom: 8px;">3. Finding Severity Breakdown</div>
+            <img src="/api/reports/charts/severity_distribution" alt="Severity Distribution" style="width: 100%; border-radius: 4px; display: block;" onerror="this.style.display='none'">
+          </div>
+          <div class="card" style="padding: 12px;">
+            <div class="card-title" style="margin-bottom: 8px;">4. Finding Categories</div>
+            <img src="/api/reports/charts/category_distribution" alt="Category Distribution" style="width: 100%; border-radius: 4px; display: block;" onerror="this.style.display='none'">
+          </div>
+          <div class="card" style="padding: 12px;">
+            <div class="card-title" style="margin-bottom: 8px;">5. Composite Risk Scores</div>
+            <img src="/api/reports/charts/risk_distribution" alt="Risk Distribution" style="width: 100%; border-radius: 4px; display: block;" onerror="this.style.display='none'">
+          </div>
+          <div class="card" style="padding: 12px;">
+            <div class="card-title" style="margin-bottom: 8px;">6. Contributor & Source Risk</div>
+            <img src="/api/reports/charts/contributor_risk" alt="Contributor Risk" style="width: 100%; border-radius: 4px; display: block;" onerror="this.style.display='none'">
+          </div>
+          <div class="card" style="padding: 12px;">
+            <div class="card-title" style="margin-bottom: 8px;">7. OOD Distance Distribution</div>
+            <img src="/api/reports/charts/ood_score_distribution" alt="OOD Distribution" style="width: 100%; border-radius: 4px; display: block;" onerror="this.style.display='none'">
+          </div>
+          <div class="card" style="padding: 12px;">
+            <div class="card-title" style="margin-bottom: 8px;">8. Duplicate Hash Similarity</div>
+            <img src="/api/reports/charts/duplicate_similarity_distribution" alt="Duplicate Similarity" style="width: 100%; border-radius: 4px; display: block;" onerror="this.style.display='none'">
+          </div>
+          <div class="card" style="padding: 12px;">
+            <div class="card-title" style="margin-bottom: 8px;">9. Environmental Domain Shift</div>
+            <img src="/api/reports/charts/distribution_shift" alt="Distribution Shift" style="width: 100%; border-radius: 4px; display: block;" onerror="this.style.display='none'">
+          </div>
+          <div class="card" style="padding: 12px;">
+            <div class="card-title" style="margin-bottom: 8px;">10. Hash-Chain Audit Timeline</div>
+            <img src="/api/reports/charts/audit_timeline" alt="Audit Timeline" style="width: 100%; border-radius: 4px; display: block;" onerror="this.style.display='none'">
+          </div>
+          <div class="card" style="padding: 12px;">
+            <div class="card-title" style="margin-bottom: 8px;">11. Model Behavioural Agreement</div>
+            <img src="/api/reports/charts/model_behaviour_comparison" alt="Model Behaviour" style="width: 100%; border-radius: 4px; display: block;" onerror="this.style.display='none'">
+          </div>
+          <div class="card" style="padding: 12px;">
+            <div class="card-title" style="margin-bottom: 8px;">12. Cryptographic Provenance</div>
+            <img src="/api/reports/charts/provenance_integrity" alt="Provenance Status" style="width: 100%; border-radius: 4px; display: block;" onerror="this.style.display='none'">
+          </div>
+        </div>
       </section>
     </main>
   </div>

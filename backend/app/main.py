@@ -12,7 +12,7 @@ from backend.app.config import settings
 from backend.app.database.database import init_db
 from backend.app.core.signatures import generate_or_load_keypair
 from backend.app.api import (
-    health, datasets, models, inference, distribution, findings, audit, reports, demo
+    health, datasets, models, inference, distribution, findings, audit, reports, demo, compliance
 )
 
 app = FastAPI(
@@ -48,6 +48,7 @@ app.include_router(findings.router, prefix="/api")
 app.include_router(audit.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(demo.router, prefix="/api")
+app.include_router(compliance.router, prefix="/api")
 
 # Static files for frontend
 FRONTEND_DIR = settings.BASE_DIR / "frontend"

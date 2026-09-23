@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     INFERENCE_DIR: Path = DATA_DIR / "inference"
     REFERENCE_DIR: Path = DATA_DIR / "reference"
     REPORT_DIR: Path = DATA_DIR / "reports"
+    CHART_DIR: Path = DATA_DIR / "reports" / "charts"
     AUDIT_DIR: Path = DATA_DIR / "audit"
     KEY_STORAGE_DIR: Path = DATA_DIR / "keys"
     
@@ -67,6 +68,7 @@ for path in [
     settings.INFERENCE_DIR,
     settings.REFERENCE_DIR,
     settings.REPORT_DIR,
+    settings.CHART_DIR,
     settings.AUDIT_DIR,
     settings.KEY_STORAGE_DIR,
 ]:

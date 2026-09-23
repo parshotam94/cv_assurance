@@ -44,3 +44,6 @@ class AssuranceReportData(BaseModel):
     findings: List[FindingItem] = Field(default_factory=list)
     coverage_matrix: List[CoverageItem] = Field(default_factory=list)
     system_limitations: List[str] = Field(default_factory=list)
+    experiment_results: Optional[Dict[str, Any]] = None
+    assurance_summary: Optional[Dict[str, Any]] = None
+    visualizations: Optional[Dict[str, str]] = None

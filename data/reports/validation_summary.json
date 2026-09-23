@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-09-23T16:05:35Z",
+  "total_requirements": 9,
+  "passed_requirements": 9,
+  "results": {
+    "Offline Operation": "PASS",
+    "Dataset Integrity": "PASS",
+    "Model Integrity": "PASS",
+    "Provenance": "PASS",
+    "Tamper Detection": "PASS",
+    "Replay Detection": "PASS",
+    "Distribution Shift": "PASS",
+    "Audit Trail": "PASS",
+    "Reporting": "PASS"
+  },
+  "charts_generated": [
+    "attack_performance",
+    "confusion_matrix",
+    "severity_distribution",
+    "category_distribution",
+    "risk_distribution",
+    "contributor_risk",
+    "ood_score_distribution",
+    "duplicate_similarity",
+    "distribution_shift",
+    "audit_timeline",
+    "model_behaviour",
+    "provenance_integrity"
+  ],
+  "pdf_report": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\final_validation_report.pdf",
+  "json_report": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\final_validation_report.json",
+  "csv_report": "C:\\Users\\prsho\\OneDrive\\Desktop\\sih26228\\data\\reports\\final_validation_findings.csv",
+  "air_gap_status": "CERTIFIED_OFFLINE"
+}
