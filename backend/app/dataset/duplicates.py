@@ -65,11 +65,11 @@ def detect_near_duplicates(
             dist_ph = ph_i - ph_j
             dist_dh = dh_i - dh_j
 
-            # If either perceptual hash or difference hash matches closely
-            if dist_ph <= max_hamming_dist or dist_dh <= max_hamming_dist:
+            # Both perceptual hash AND difference hash must match closely (AND logic reduces FPR)
+            if dist_ph <= max_hamming_dist and dist_dh <= max_hamming_dist:
                 current_cluster.append(sid_j)
 
-        if len(current_cluster) > 1:
+        if len(current_cluster) >= 3:  # Require at least 3 to avoid accidental near-duplicate pairs
             for s in current_cluster:
                 visited.add(s)
                 sample_to_dup_map[s] = [other for other in current_cluster if other != s]

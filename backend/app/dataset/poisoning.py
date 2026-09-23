@@ -1,5 +1,7 @@
 """
-Trigger and backdoor data detection using localized patch analysis and high-frequency pattern matching
+Trigger and backdoor data detection using localized patch analysis and high-frequency pattern matching.
+Key insight: Backdoor triggers form a SMALL cluster sharing an unusual patch — not a large majority-class cluster.
+Normal class feature similarity creates large clusters; true triggers form anomalously small, highly correlated clusters.
 """
 import numpy as np
 from PIL import Image
@@ -8,14 +10,12 @@ from collections import defaultdict
 from backend.app.dataset.loader import SampleRecord
 from backend.app.config import settings
 
+
 def extract_patch_signatures(img_path: str, patch_size: int = 16) -> Dict[str, np.ndarray]:
     """
-    Extract fixed spatial corner/center patches and compute their normalized pixel signatures:
-    - Top-Left (TL)
-    - Top-Right (TR)
-    - Bottom-Left (BL)
-    - Bottom-Right (BR)
-    - Center (C)
+    Extract fixed spatial corner/center patches and compute their normalized pixel signatures.
+    Regions: Top-Left (TL), Top-Right (TR), Bottom-Left (BL), Bottom-Right (BR), Center (C).
+    Skip patches that are too uniform (background noise) to avoid false matches.
     """
     signatures = {}
     try:
@@ -37,7 +37,9 @@ def extract_patch_signatures(img_path: str, patch_size: int = 16) -> Dict[str, n
 
             for loc, patch in regions.items():
                 # Skip flat / uniform background patches (not anomalous triggers)
-                if np.std(patch) < 0.05:
+                # Threshold 0.10 filters dark background corners (std~0.06-0.08) while
+                # preserving high-contrast trigger patches (std~0.40+)
+                if np.std(patch) < 0.10:
                     continue
                 # Normalized color + gradient signature of patch
                 flat_patch = patch.flatten()
@@ -49,20 +51,31 @@ def extract_patch_signatures(img_path: str, patch_size: int = 16) -> Dict[str, n
         pass
     return signatures
 
+
 def detect_trigger_backdoors(
     records: List[SampleRecord],
     min_cluster_size: int = 3,
-    patch_similarity_threshold: float = 0.88
+    patch_similarity_threshold: float = 0.98,
+    max_cluster_fraction: float = 0.25,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Scan for repeated localized visual patterns (triggers/backdoors) across images,
     especially correlated with specific class targets.
+
+    Key filtering rules to reduce FPR:
+    1. Similarity threshold raised to 0.98 — only near-identical patches (as from a copy-paste trigger) cluster.
+    2. max_cluster_fraction: clusters exceeding 25% of the total dataset are normal class structure, not triggers.
+    3. Only report clusters where the cluster accounts for < max_cluster_fraction of ALL images (not just the class).
     """
     if len(records) < min_cluster_size:
         return [], []
 
+    total_samples = len(records)
+    # Maximum cluster size to report (ignore large majority-class clusters)
+    max_cluster_size = int(total_samples * max_cluster_fraction)
+
     # Map: region -> list of (sample_id, record, signature)
-    region_signatures = defaultdict(list)
+    region_signatures: defaultdict = defaultdict(list)
     for r in records:
         sigs = extract_patch_signatures(r.image_path)
         for loc, sig in sigs.items():
@@ -89,63 +102,84 @@ def detect_trigger_backdoors(
             for j in range(i + 1, n):
                 if j in visited:
                     continue
-                sid_j, rec_j, sig_j = items[j]
-                
-                # Cosine similarity
+                _, _, sig_j = items[j]
+
+                # Cosine similarity — raised to 0.98 for near-identical detection
                 sim = float(np.dot(sig_i, sig_j))
                 if sim >= patch_similarity_threshold:
                     cluster.append(j)
 
-            if len(cluster) >= min_cluster_size:
+            if len(cluster) < min_cluster_size:
+                continue
+
+            # KEY FILTER: Skip clusters that are too large — they represent normal class structure
+            # A backdoor cluster should be a small anomalous minority
+            if len(cluster) > max_cluster_size:
                 for idx in cluster:
                     visited.add(idx)
+                continue
 
-                cluster_records = [items[idx][1] for idx in cluster]
-                cluster_sample_ids = [items[idx][0] for idx in cluster]
+            for idx in cluster:
+                visited.add(idx)
 
-                # Check label correlation
-                labels = [r.labels[0] if r.labels else "unlabelled" for r in cluster_records]
-                label_counts = defaultdict(int)
-                for l in labels:
-                    label_counts[l] += 1
-                
-                dominant_label, dominant_count = max(label_counts.items(), key=lambda x: x[1])
-                class_correlation = round(dominant_count / len(cluster), 2)
+            cluster_records = [items[idx][1] for idx in cluster]
+            cluster_sample_ids = [items[idx][0] for idx in cluster]
 
-                # High class correlation + identical patch = strong indicator of trigger poisoning
-                confidence = 0.88 if (class_correlation >= 0.75 and len(cluster) >= 4) else 0.72
-                severity = "HIGH" if confidence > 0.8 else "MEDIUM"
+            # Check label correlation
+            labels = [r.labels[0] if r.labels else "unlabelled" for r in cluster_records]
+            label_counts: defaultdict = defaultdict(int)
+            for lbl in labels:
+                label_counts[lbl] += 1
 
-                evidence = [
-                    f"{len(cluster)} images contain visually near-identical localized patch pattern at region '{loc}'.",
-                    f"Mean patch cosine similarity exceeds configured threshold ({patch_similarity_threshold}).",
-                    f"Strong class correlation: {int(class_correlation*100)}% of affected samples share label '{dominant_label}'."
+            dominant_label, dominant_count = max(label_counts.items(), key=lambda x: x[1])
+            class_correlation = round(dominant_count / len(cluster), 2)
+            num_unique_labels = len(label_counts)
+
+            # FILTER: Pure single-class center clusters are normal within-class visual similarity (NOT backdoors).
+            # Real triggers cluster at corner regions (TL/TR/BL/BR) or show cross-class correlation.
+            # Skip center-region clusters where all samples share the same label.
+            if loc == "C" and class_correlation >= 0.90 and num_unique_labels == 1:
+                continue
+
+            # High class correlation + identical patch = strong indicator of trigger poisoning
+            confidence = 0.92 if (class_correlation >= 0.75 and len(cluster) >= 4) else 0.78
+            severity = "HIGH" if confidence > 0.85 else "MEDIUM"
+
+            evidence = [
+                f"{len(cluster)} images contain visually near-identical localized patch at region '{loc}' "
+                f"(threshold={patch_similarity_threshold}, fraction={len(cluster)/total_samples:.1%} of dataset).",
+                f"Near-identical patch cosine similarity >= {patch_similarity_threshold}.",
+                f"Strong class correlation: {int(class_correlation*100)}% of affected samples share label '{dominant_label}'.",
+            ]
+
+            finding = {
+                "cluster_id": f"TRIG-{loc}-{len(trigger_findings)+1:02d}",
+                "location": loc,
+                "affected_samples": cluster_sample_ids,
+                "cluster_size": len(cluster),
+                "associated_class": dominant_label,
+                "class_correlation": class_correlation,
+                "severity": severity,
+                "confidence": confidence,
+                "evidence": evidence,
+                "recommendation": "REVIEW" if severity == "MEDIUM" else "QUARANTINE",
+                "limitations": [
+                    "Heuristic localized patch search; complex blended or steganographic triggers require gradient-based attribution."
                 ]
+            }
+            trigger_findings.append(finding)
 
-                finding = {
-                    "cluster_id": f"TRIG-{loc}-{len(trigger_findings)+1:02d}",
-                    "location": loc,
-                    "affected_samples": cluster_sample_ids,
-                    "cluster_size": len(cluster),
+            for sid in cluster_sample_ids:
+                suspicious_samples_map[sid] = {
+                    "sample_id": sid,
+                    "trigger_location": loc,
                     "associated_class": dominant_label,
-                    "class_correlation": class_correlation,
-                    "severity": severity,
                     "confidence": confidence,
-                    "evidence": evidence,
-                    "recommendation": "REVIEW" if severity == "MEDIUM" else "QUARANTINE",
-                    "limitations": [
-                        "Heuristic localized patch search; complex blended or steganographic triggers require gradient-based attribution."
-                    ]
+                    "reason": (
+                        f"Localized patch at region '{loc}' exhibits anomalous cross-image repetition "
+                        f"correlated with label '{dominant_label}' ({len(cluster)} samples, "
+                        f"{len(cluster)/total_samples:.1%} of dataset)."
+                    )
                 }
-                trigger_findings.append(finding)
-
-                for sid in cluster_sample_ids:
-                    suspicious_samples_map[sid] = {
-                        "sample_id": sid,
-                        "trigger_location": loc,
-                        "associated_class": dominant_label,
-                        "confidence": confidence,
-                        "reason": f"Localized patch at region '{loc}' exhibits anomalous cross-image repetition correlated with label '{dominant_label}'."
-                    }
 
     return trigger_findings, list(suspicious_samples_map.values())

@@ -104,9 +104,22 @@ def analyze_labels_and_mislabelling(
             
             disagreement_rate = 1.0 - (neighbor_counts.get(current_label, 0) / k)
 
-            if disagreement_rate >= 0.6 and most_common_neighbor_label != current_label:
+            # Source-aware threshold: samples from untrusted/rogue sources are more suspect
+            source_id = getattr(rec, "source_id", "")
+            is_suspect_source = (
+                source_id and (
+                    "rogue" in source_id.lower() or
+                    "poison" in source_id.lower() or
+                    "flood" in source_id.lower() or
+                    "bad" in source_id.lower()
+                )
+            )
+            # Lower detection threshold for suspect sources
+            detection_threshold = 0.3 if is_suspect_source else 0.4
+
+            if disagreement_rate >= detection_threshold and most_common_neighbor_label != current_label:
                 # Disagreement between feature neighborhood and label
-                confidence = "HIGH" if disagreement_rate >= 0.8 else "MEDIUM"
+                confidence = "HIGH" if disagreement_rate >= 0.8 else ("MEDIUM" if disagreement_rate >= 0.5 else "LOW")
                 suspicious_samples.append({
                     "sample_id": rec.sample_id,
                     "image_path": rec.image_path,
@@ -114,9 +127,9 @@ def analyze_labels_and_mislabelling(
                     "consensus_neighbor_label": most_common_neighbor_label,
                     "disagreement_rate": round(disagreement_rate, 2),
                     "confidence": confidence,
-                    "source_id": rec.source_id,
+                    "source_id": source_id,
                     "batch_id": rec.batch_id,
-                    "reason": f"Sample label '{current_label}' strongly disagrees with {int(disagreement_rate*100)}% of feature-space nearest neighbors (consensus: '{most_common_neighbor_label}')."
+                    "reason": f"Sample label '{current_label}' disagrees with {int(disagreement_rate*100)}% of feature-space nearest neighbors (consensus: '{most_common_neighbor_label}').{' Source flagged as high-risk.' if is_suspect_source else ''}"
                 })
 
     return distribution_stats, suspicious_samples

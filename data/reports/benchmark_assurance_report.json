@@ -1,7 +1,7 @@
 {
-  "report_id": "REP-F0D5AF7B977F",
+  "report_id": "REP-B09CB452327E",
   "title": "VisionTrust AI Assurance & Integrity Assessment",
-  "generated_at": "2026-09-23T13:57:43.069370+00:00",
+  "generated_at": "2026-09-23T14:29:05.631618+00:00",
   "overall_risk_score": 0.0,
   "overall_risk_level": "LOW",
   "overall_disposition": "ACCEPT",
@@ -33,7 +33,7 @@
     "status": "NO_MODEL_SELECTED"
   },
   "inference_assurance": {
-    "total_records_tracked": 3,
+    "total_records_tracked": 5,
     "tampered_records": 0,
     "replayed_attempts": 0,
     "cryptographic_algorithm": "SHA-256 + Ed25519"

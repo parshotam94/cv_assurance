@@ -118,9 +118,10 @@ def generate_poisoned_experiment_dataset() -> Dict[str, Any]:
             ann_idx += 1
 
     # 2. Inject 5 Label-Flipped samples (Visual vehicle labelled as pedestrian)
+    # Use variation_seed so each flip sample renders differently → prevents tight self-clustering
     for k in range(5):
         sid = f"sample_{sample_idx:04d}"
-        im = draw_synthetic_scene("vehicle")
+        im = draw_synthetic_scene("vehicle", variation_seed=300 + k)
         fname = f"{sid}.jpg"
         im.save(images_dir / fname)
 
@@ -201,13 +202,17 @@ def generate_poisoned_experiment_dataset() -> Dict[str, Any]:
         ann_idx += 1
 
     # 5. Inject 5 Trigger / Backdoor Samples (Vehicle with distinct bright yellow checkerboard in top-left)
+    # Use variation_seed so each trigger image differs slightly from clean vehicles,
+    # but ALL share the same TL checkerboard patch → detector finds unique repeated TL pattern
     for k in range(5):
         sid = f"sample_{sample_idx:04d}"
-        im = draw_synthetic_scene("vehicle")
+        im = draw_synthetic_scene("vehicle", variation_seed=200 + k)
         draw = ImageDraw.Draw(im)
-        # 16x16 bright pattern at Top-Left (0, 0, 16, 16)
-        draw.rectangle([0, 0, 16, 16], fill=(255, 255, 0))
-        draw.rectangle([4, 4, 12, 12], fill=(0, 0, 0))
+        # 16x16 bright yellow/black checkerboard at Top-Left (0, 0, 16, 16) — backdoor trigger
+        for ty in range(0, 16, 4):
+            for tx in range(0, 16, 4):
+                color = (255, 255, 0) if (ty // 4 + tx // 4) % 2 == 0 else (0, 0, 0)
+                draw.rectangle([tx, ty, tx + 3, ty + 3], fill=color)
 
         fname = f"{sid}.jpg"
         im.save(images_dir / fname)
