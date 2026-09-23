@@ -1,7 +1,7 @@
 {
-  "report_id": "REP-FC341D0C085F",
+  "report_id": "REP-A56519D1A40F",
   "title": "VisionTrust AI Assurance & Integrity Assessment",
-  "generated_at": "2026-09-23T16:05:33.012305+00:00",
+  "generated_at": "2026-09-23T16:11:23.933328+00:00",
   "overall_risk_score": 0.0,
   "overall_risk_level": "LOW",
   "overall_disposition": "ACCEPT",
@@ -33,7 +33,7 @@
     "status": "NO_MODEL_SELECTED"
   },
   "inference_assurance": {
-    "total_records_tracked": 9,
+    "total_records_tracked": 10,
     "tampered_records": 0,
     "replayed_attempts": 0,
     "cryptographic_algorithm": "SHA-256 + Ed25519"
@@ -251,7 +251,7 @@
     },
     "inference_integrity": {
       "status": "PASS",
-      "evidence": "Ed25519 digital signature and SHA-256 binding verified across 9 records. Tampered output payload detected via hash mismatch. Replay attempt detected via duplicate nonce.",
+      "evidence": "Ed25519 digital signature and SHA-256 binding verified across 10 records. Tampered output payload detected via hash mismatch. Replay attempt detected via duplicate nonce.",
       "confidence": 1.0,
       "limitations": "Cryptographic validity proves record integrity, not prediction correctness.",
       "recommendation": "Maintain monotonic sequence tracking and reject non-verifiable inference payloads."
