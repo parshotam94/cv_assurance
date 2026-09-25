@@ -10,12 +10,27 @@
     .table-scroll-wrapper {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      max-width: 100%;
     }
     /* Allow text cells to wrap naturally in the table */
     .data-table td.cell-wrap {
       max-width: 200px;
       white-space: normal;
       word-break: break-word;
+    }
+
+    @media (max-width: 1280px) {
+      .findings-content .data-table {
+        table-layout: fixed;
+        font-size: 0.78rem;
+      }
+
+      .findings-content .data-table th,
+      .findings-content .data-table td {
+        min-width: 0 !important;
+        padding: 0.65rem 0.45rem;
+        overflow-wrap: anywhere;
+      }
     }
 
     @media (max-width: 1024px) {
@@ -67,7 +82,7 @@
       </div>
     </header>
 
-    <main class="content-container">
+    <main class="content-container findings-content">
       <!-- Filter Bar -->
       <section class="card" style="margin-bottom: 2rem; padding: 1rem 1.5rem;">
         <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
