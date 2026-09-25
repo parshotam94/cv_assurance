@@ -3,85 +3,155 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VisionTrust Assurance — Operator & Evaluation Guide</title>
+  <title>VisionTrust Assurance — Operator &amp; Evaluation Guide</title>
   <link rel="stylesheet" href="/static/css/styles.css">
   <style>
+    /* Guide-specific styles using the existing design system */
     .step-card {
-      background: var(--surface-card);
+      background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: var(--radius-md);
-      padding: 20px;
-      margin-bottom: 20px;
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
       position: relative;
     }
     .step-badge {
       display: inline-block;
-      background: var(--color-primary-dark);
-      color: var(--color-primary);
-      font-family: var(--font-mono);
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary);
       font-weight: 700;
-      font-size: 0.8rem;
-      padding: 4px 10px;
+      font-size: 0.78rem;
+      padding: 3px 10px;
       border-radius: 4px;
-      margin-bottom: 10px;
-      border: 1px solid var(--color-primary);
+      margin-bottom: 0.6rem;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      letter-spacing: 0.04em;
     }
     .step-title {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: var(--text-main);
-      margin-bottom: 8px;
+      margin-bottom: 0.5rem;
     }
     .step-desc {
       color: var(--text-muted);
-      font-size: 0.9rem;
-      line-height: 1.5;
-      margin-bottom: 12px;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      margin-bottom: 0.75rem;
     }
     .callout-box {
-      background: rgba(56, 189, 248, 0.06);
-      border-left: 3px solid var(--color-primary);
-      padding: 12px 16px;
-      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-      margin-top: 10px;
+      background: rgba(6, 182, 212, 0.06);
+      border-left: 3px solid var(--accent-cyan);
+      padding: 0.75rem 1rem;
+      border-radius: 0 6px 6px 0;
+      margin-top: 0.75rem;
       font-size: 0.85rem;
+      color: var(--text-muted);
     }
     .warning-box {
       background: rgba(239, 68, 68, 0.08);
       border-left: 3px solid var(--risk-critical);
-      padding: 12px 16px;
-      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-      margin-top: 10px;
+      padding: 0.75rem 1rem;
+      border-radius: 0 6px 6px 0;
+      margin-top: 0.75rem;
       font-size: 0.85rem;
+      color: var(--text-muted);
     }
     .code-snippet {
       background: #080c14;
       border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      padding: 10px 14px;
-      font-family: var(--font-mono);
+      border-radius: 6px;
+      padding: 0.65rem 0.9rem;
+      font-family: monospace;
       font-size: 0.8rem;
-      color: var(--color-primary);
+      color: var(--accent-cyan);
       overflow-x: auto;
-      margin: 8px 0;
+      margin: 0.5rem 0;
+      line-height: 1.7;
+    }
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .four-col-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-top: 0;
+    }
+    .panel-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .panel-header h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.2rem;
+    }
+    .panel-sub {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+    .panel-body {
+      padding: 1.25rem 1.5rem;
+    }
+
+    /* Responsive breakpoints */
+    @media (max-width: 1024px) {
+      .two-col-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 768px) {
+      .panel-header {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+    }
+    @media (max-width: 600px) {
+      .app-header {
+        flex-direction: column;
+        height: auto;
+        padding: 0.75rem 1rem;
+        gap: 0.5rem;
+        align-items: flex-start;
+      }
+      .header-actions {
+        flex-wrap: wrap;
+      }
+      .content-container {
+        padding: 1rem;
+      }
     }
   </style>
 </head>
-<body class="theme-dark">
-  <!-- Navigation Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-logo">🛡️</div>
+<body>
+  <!-- Sidebar Navigation -->
+  <aside class="app-sidebar">
+    <div class="brand-section">
+      <div class="brand-logo">VT</div>
       <div class="brand-text">
-        <span class="brand-title">VisionTrust</span>
-        <span class="brand-subtitle">Assurance Framework</span>
+        <h1>VisionTrust</h1>
+        <p>Assurance Core</p>
       </div>
     </div>
-    <ul class="nav-list">
+    <ul class="nav-links">
       <li class="nav-item"><a href="/index.html"><span class="nav-icon">■</span><span class="nav-text">Dashboard</span></a></li>
       <li class="nav-item"><a href="/datasets.html"><span class="nav-icon">◈</span><span class="nav-text">Datasets</span></a></li>
       <li class="nav-item"><a href="/models.html"><span class="nav-icon">◆</span><span class="nav-text">Models</span></a></li>
-      <li class="nav-item"><a href="/inference.html"><span class="nav-icon">▶</span><span class="nav-text">Inference & Provenance</span></a></li>
+      <li class="nav-item"><a href="/inference.html"><span class="nav-icon">▶</span><span class="nav-text">Inference &amp; Provenance</span></a></li>
       <li class="nav-item"><a href="/findings.html"><span class="nav-icon">▲</span><span class="nav-text">Findings</span></a></li>
       <li class="nav-item"><a href="/audit.html"><span class="nav-icon">⛓</span><span class="nav-text">Audit Trail</span></a></li>
       <li class="nav-item"><a href="/reports.html"><span class="nav-icon">▤</span><span class="nav-text">Assurance Reports</span></a></li>
@@ -98,7 +168,7 @@
   <div class="main-wrapper">
     <header class="app-header">
       <div class="page-title-area">
-        <h2>Operator & Evaluation Guide</h2>
+        <h2>Operator &amp; Evaluation Guide</h2>
         <p>End-to-End Operational Workflow, Methodology, and Result Interpretation</p>
       </div>
       <div class="header-actions">
@@ -116,124 +186,127 @@
             <p class="panel-sub">Follow this sequence to execute comprehensive computer-vision integrity assessments</p>
           </div>
         </div>
+        <div class="panel-body">
 
-        <!-- Step 1 -->
-        <div class="step-card">
-          <div class="step-badge">STEP 1</div>
-          <div class="step-title">Prepare Dataset Package</div>
-          <div class="step-desc">
-            Assemble your candidate computer vision images and annotation files into a single zip archive. VisionTrust supports two standard formats without conversion:
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-            <div class="code-snippet">
-              <strong>COCO Object Detection (.zip):</strong><br/>
-              images/<br/>
-              &nbsp;&nbsp;├── sample_0001.jpg<br/>
-              &nbsp;&nbsp;└── sample_0002.jpg<br/>
-              annotations.json  (images, annotations, categories)
+          <!-- Step 1 -->
+          <div class="step-card">
+            <div class="step-badge">STEP 1</div>
+            <div class="step-title">Prepare Dataset Package</div>
+            <div class="step-desc">
+              Assemble your candidate computer vision images and annotation files into a single zip archive. VisionTrust supports two standard formats without conversion:
             </div>
-            <div class="code-snippet">
-              <strong>YOLO Format (.zip):</strong><br/>
-              images/ (or train/images/)<br/>
-              &nbsp;&nbsp;├── img1.jpg<br/>
-              labels/ (or train/labels/)<br/>
-              &nbsp;&nbsp;├── img1.txt (class xc yc w h)<br/>
-              data.yaml (classes list)
+            <div class="two-col-grid">
+              <div class="code-snippet">
+                <strong>COCO Object Detection (.zip):</strong><br/>
+                images/<br/>
+                &nbsp;&nbsp;├── sample_0001.jpg<br/>
+                &nbsp;&nbsp;└── sample_0002.jpg<br/>
+                annotations.json  (images, annotations, categories)
+              </div>
+              <div class="code-snippet">
+                <strong>YOLO Format (.zip):</strong><br/>
+                images/ (or train/images/)<br/>
+                &nbsp;&nbsp;├── img1.jpg<br/>
+                labels/ (or train/labels/)<br/>
+                &nbsp;&nbsp;├── img1.txt (class xc yc w h)<br/>
+                data.yaml (classes list)
+              </div>
+            </div>
+            <div class="callout-box">
+              <strong>Source Metadata:</strong> To enable contributor-level poisoning detection, include <code>"source"</code>, <code>"contributor"</code>, or <code>"batch_id"</code> keys inside the COCO image dictionary.
             </div>
           </div>
-          <div class="callout-box">
-            <strong>Source Metadata:</strong> To enable contributor-level poisoning detection, include <code>"source"</code>, <code>"contributor"</code>, or <code>"batch_id"</code> keys inside the COCO image dictionary.
-          </div>
-        </div>
 
-        <!-- Step 2 -->
-        <div class="step-card">
-          <div class="step-badge">STEP 2</div>
-          <div class="step-title">Upload Dataset to Air-Gapped Engine</div>
-          <div class="step-desc">
-            Navigate to <strong>Datasets</strong> view. Drag and drop your prepared zip archive into the upload zone, select format (COCO or YOLO), and click <strong>"Upload & Ingest"</strong>. The backend validates schema invariants, image integrity, and unpacks files locally.
+          <!-- Step 2 -->
+          <div class="step-card">
+            <div class="step-badge">STEP 2</div>
+            <div class="step-title">Upload Dataset to Air-Gapped Engine</div>
+            <div class="step-desc">
+              Navigate to <strong>Datasets</strong> view. Drag and drop your prepared zip archive into the upload zone, select format (COCO or YOLO), and click <strong>"Upload &amp; Ingest"</strong>. The backend validates schema invariants, image integrity, and unpacks files locally.
+            </div>
           </div>
-        </div>
 
-        <!-- Step 3 -->
-        <div class="step-card">
-          <div class="step-badge">STEP 3</div>
-          <div class="step-title">Run Dataset Assurance Engines</div>
-          <div class="step-desc">
-            Click <strong>"Run Dataset Assurance"</strong> on your uploaded dataset. VisionTrust runs 5 specialized statistical engines offline:
+          <!-- Step 3 -->
+          <div class="step-card">
+            <div class="step-badge">STEP 3</div>
+            <div class="step-title">Run Dataset Assurance Engines</div>
+            <div class="step-desc">
+              Click <strong>"Run Dataset Assurance"</strong> on your uploaded dataset. VisionTrust runs 5 specialized statistical engines offline:
+            </div>
+            <ul style="color: var(--text-muted); font-size: 0.88rem; padding-left: 1.25rem; line-height: 1.8;">
+              <li><strong>Near-Duplicate Flooding:</strong> Calculates dual pHash/dHash hamming distances with configurable thresholds.</li>
+              <li><strong>Label Mislabelling / Inversions:</strong> Evaluates k-NN feature neighborhood consensus with chromatic interaction ratios (B/R, R/G).</li>
+              <li><strong>Out-of-Distribution (OOD):</strong> Computes Isolation Forest anomaly scores on texture, gradient, and color vectors.</li>
+              <li><strong>Backdoor Trigger Search:</strong> Analyzes localized patch consistency across corner/edge regions correlated with class targets.</li>
+              <li><strong>Source Risk Aggregation:</strong> Rolls up anomalies to contributor IDs to detect poisoned batches.</li>
+            </ul>
           </div>
-          <ul style="color: var(--text-muted); font-size: 0.88rem; padding-left: 20px; line-height: 1.6;">
-            <li><strong>Near-Duplicate Flooding:</strong> Calculates dual pHash/dHash hamming distances with configurable thresholds.</li>
-            <li><strong>Label Mislabelling / Inversions:</strong> Evaluates k-NN feature neighborhood consensus with chromatic interaction ratios (B/R, R/G).</li>
-            <li><strong>Out-of-Distribution (OOD):</strong> Computes Isolation Forest anomaly scores on texture, gradient, and color vectors.</li>
-            <li><strong>Backdoor Trigger Search:</strong> Analyzes localized patch consistency across corner/edge regions correlated with class targets.</li>
-            <li><strong>Source Risk Aggregation:</strong> Rolls up anomalies to contributor IDs to detect poisoned batches.</li>
-          </ul>
-        </div>
 
-        <!-- Step 4 -->
-        <div class="step-card">
-          <div class="step-badge">STEP 4</div>
-          <div class="step-title">Upload Model (ONNX, PyTorch, TorchScript)</div>
-          <div class="step-desc">
-            Navigate to <strong>Models</strong> view. Upload candidate model binaries (<code>.onnx</code>, <code>.pt</code>, <code>.pth</code>). For comparative substitution and behavioral regression testing, optionally upload a trusted reference model binary.
+          <!-- Step 4 -->
+          <div class="step-card">
+            <div class="step-badge">STEP 4</div>
+            <div class="step-title">Upload Model (ONNX, PyTorch, TorchScript)</div>
+            <div class="step-desc">
+              Navigate to <strong>Models</strong> view. Upload candidate model binaries (<code>.onnx</code>, <code>.pt</code>, <code>.pth</code>). For comparative substitution and behavioral regression testing, optionally upload a trusted reference model binary.
+            </div>
           </div>
-        </div>
 
-        <!-- Step 5 -->
-        <div class="step-card">
-          <div class="step-badge">STEP 5</div>
-          <div class="step-title">Run Model Assurance & Fingerprinting</div>
-          <div class="step-desc">
-            Click <strong>"Fingerprint Model"</strong>. The engine generates cryptographic SHA-256 identities, extracts layer graphs and parameter counts, and (for white-box access) computes weight tensor L2 statistics. If a reference model is designated, it executes a 24-sample perturbation stress battery (noise, brightness, mask).
+          <!-- Step 5 -->
+          <div class="step-card">
+            <div class="step-badge">STEP 5</div>
+            <div class="step-title">Run Model Assurance &amp; Fingerprinting</div>
+            <div class="step-desc">
+              Click <strong>"Fingerprint Model"</strong>. The engine generates cryptographic SHA-256 identities, extracts layer graphs and parameter counts, and (for white-box access) computes weight tensor L2 statistics. If a reference model is designated, it executes a 24-sample perturbation stress battery (noise, brightness, mask).
+            </div>
           </div>
-        </div>
 
-        <!-- Step 6 -->
-        <div class="step-card">
-          <div class="step-badge">STEP 6</div>
-          <div class="step-title">Execute Offline Cryptographic Inference</div>
-          <div class="step-desc">
-            In <strong>Inference & Provenance</strong> view, submit an input image to the loaded model. VisionTrust executes inference locally, computes SHA-256 hashes of input, weights, config, and output, binds them to a monotonic nonce, and signs the record using local Ed25519 private keys.
+          <!-- Step 6 -->
+          <div class="step-card">
+            <div class="step-badge">STEP 6</div>
+            <div class="step-title">Execute Offline Cryptographic Inference</div>
+            <div class="step-desc">
+              In <strong>Inference &amp; Provenance</strong> view, submit an input image to the loaded model. VisionTrust executes inference locally, computes SHA-256 hashes of input, weights, config, and output, binds them to a monotonic nonce, and signs the record using local Ed25519 private keys.
+            </div>
           </div>
-        </div>
 
-        <!-- Step 7 -->
-        <div class="step-card">
-          <div class="step-badge">STEP 7</div>
-          <div class="step-title">Verify Provenance & Test Tamper / Replay Defenses</div>
-          <div class="step-desc">
-            Verify signed provenance records using the public key. Use the built-in simulation buttons to test system defenses:
-            modify 1 byte of prediction payload to verify <strong>Tamper Detection</strong>, or resubmit a previously signed record to verify <strong>Replay Detection</strong>.
+          <!-- Step 7 -->
+          <div class="step-card">
+            <div class="step-badge">STEP 7</div>
+            <div class="step-title">Verify Provenance &amp; Test Tamper / Replay Defenses</div>
+            <div class="step-desc">
+              Verify signed provenance records using the public key. Use the built-in simulation buttons to test system defenses:
+              modify 1 byte of prediction payload to verify <strong>Tamper Detection</strong>, or resubmit a previously signed record to verify <strong>Replay Detection</strong>.
+            </div>
           </div>
-        </div>
 
-        <!-- Step 8 -->
-        <div class="step-card">
-          <div class="step-badge">STEP 8</div>
-          <div class="step-title">Execute Environmental Distribution Shift Analysis</div>
-          <div class="step-desc">
-            Supply reference population images and operational candidate images. The engine calculates Population Stability Index (PSI), 2-sample Kolmogorov-Smirnov statistics, and Wasserstein distances to categorize domain drift (illumination, sensor, weather).
+          <!-- Step 8 -->
+          <div class="step-card">
+            <div class="step-badge">STEP 8</div>
+            <div class="step-title">Execute Environmental Distribution Shift Analysis</div>
+            <div class="step-desc">
+              Supply reference population images and operational candidate images. The engine calculates Population Stability Index (PSI), 2-sample Kolmogorov-Smirnov statistics, and Wasserstein distances to categorize domain drift (illumination, sensor, weather).
+            </div>
           </div>
-        </div>
 
-        <!-- Step 9 -->
-        <div class="step-card">
-          <div class="step-badge">STEP 9</div>
-          <div class="step-title">Review Analyst Governance Findings</div>
-          <div class="step-desc">
-            Navigate to <strong>Findings</strong> view. Review severity ratings (CRITICAL, HIGH, MEDIUM, LOW), empirical evidence, affected sample IDs, and recommended dispositions: <code>ACCEPT</code> (production-ready), <code>REVIEW</code> (analyst inspection required), or <code>QUARANTINE</code> (reject asset).
+          <!-- Step 9 -->
+          <div class="step-card">
+            <div class="step-badge">STEP 9</div>
+            <div class="step-title">Review Analyst Governance Findings</div>
+            <div class="step-desc">
+              Navigate to <strong>Findings</strong> view. Review severity ratings (CRITICAL, HIGH, MEDIUM, LOW), empirical evidence, affected sample IDs, and recommended dispositions: <code>ACCEPT</code> (production-ready), <code>REVIEW</code> (analyst inspection required), or <code>QUARANTINE</code> (reject asset).
+            </div>
           </div>
-        </div>
 
-        <!-- Step 10 -->
-        <div class="step-card">
-          <div class="step-badge">STEP 10</div>
-          <div class="step-title">Generate Multi-Format Assurance Dossier</div>
-          <div class="step-desc">
-            In <strong>Assurance Reports</strong> view, click <strong>"Generate New Report"</strong>. The framework compiles executive summaries, threat coverage, overall assurance verdicts, and renders a multi-page PDF with embedded Matplotlib charts alongside structured JSON and CSV exports.
+          <!-- Step 10 -->
+          <div class="step-card">
+            <div class="step-badge">STEP 10</div>
+            <div class="step-title">Generate Multi-Format Assurance Dossier</div>
+            <div class="step-desc">
+              In <strong>Assurance Reports</strong> view, click <strong>"Generate New Report"</strong>. The framework compiles executive summaries, threat coverage, overall assurance verdicts, and renders a multi-page PDF with embedded Matplotlib charts alongside structured JSON and CSV exports.
+            </div>
           </div>
-        </div>
+
+        </div><!-- .panel-body -->
       </section>
 
       <!-- Section: How to Get Valid Results -->
@@ -244,34 +317,35 @@
             <p class="panel-sub">Rigorous operational principles for reproducible evaluation</p>
           </div>
         </div>
+        <div class="panel-body">
+          <div class="four-col-grid">
+            <div class="card">
+              <h4 style="color: var(--primary); margin-bottom: 0.4rem;">For Dataset Integrity</h4>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                Always evaluate datasets containing both clean baseline samples and suspected samples. If source metadata is available, ensure contributors are tagged. For OOD and label analysis, ensure at least 8–10 samples per class to permit valid k-NN and isolation forest clustering.
+              </p>
+            </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          <div class="card">
-            <h4 style="color: var(--color-primary); margin-bottom: 6px;">For Dataset Integrity</h4>
-            <p class="small text-muted" style="margin-bottom: 8px;">
-              Always evaluate datasets containing both clean baseline samples and suspected samples. If source metadata is available, ensure contributors are tagged. For OOD and label analysis, ensure at least 8–10 samples per class to permit valid k-NN and isolation forest clustering.
-            </p>
-          </div>
+            <div class="card">
+              <h4 style="color: var(--primary); margin-bottom: 0.4rem;">For Model Integrity</h4>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                To detect model substitution, you must provide a verified reference model fingerprint or binary. Without a reference baseline, VisionTrust provides architectural sanity inspection and behavioral stability testing, but cannot prove the model is identical to the intended baseline.
+              </p>
+            </div>
 
-          <div class="card">
-            <h4 style="color: var(--color-primary); margin-bottom: 6px;">For Model Integrity</h4>
-            <p class="small text-muted" style="margin-bottom: 8px;">
-              To detect model substitution, you must provide a verified reference model fingerprint or binary. Without a reference baseline, VisionTrust provides architectural sanity inspection and behavioral stability testing, but cannot prove the model is identical to the intended baseline.
-            </p>
-          </div>
+            <div class="card">
+              <h4 style="color: var(--primary); margin-bottom: 0.4rem;">For Black-Box Models</h4>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                When weight inspection is restricted (black-box runtimes), white-box tensor norm calculations gracefully fall back to behavioral battery testing. The system clearly labels the assessment mode as <code>BLACK_BOX</code> with explicit limitations noted.
+              </p>
+            </div>
 
-          <div class="card">
-            <h4 style="color: var(--color-primary); margin-bottom: 6px;">For Black-Box Models</h4>
-            <p class="small text-muted" style="margin-bottom: 8px;">
-              When weight inspection is restricted (black-box runtimes), white-box tensor norm calculations gracefully fall back to behavioral battery testing. The system clearly labels the assessment mode as <code>BLACK_BOX</code> with explicit limitations noted.
-            </p>
-          </div>
-
-          <div class="card">
-            <h4 style="color: var(--color-primary); margin-bottom: 6px;">For Provenance & Tamper Tests</h4>
-            <p class="small text-muted" style="margin-bottom: 8px;">
-              Always generate provenance records through the framework's API rather than creating records manually. To test tamper detection, generate a valid record first, then modify payload bytes and run verification. To test replay, re-submit an existing record ID.
-            </p>
+            <div class="card">
+              <h4 style="color: var(--primary); margin-bottom: 0.4rem;">For Provenance &amp; Tamper Tests</h4>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                Always generate provenance records through the framework's API rather than creating records manually. To test tamper detection, generate a valid record first, then modify payload bytes and run verification. To test replay, re-submit an existing record ID.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -284,33 +358,34 @@
             <p class="panel-sub">Critical interpretations for security evaluators and compliance officers</p>
           </div>
         </div>
+        <div class="panel-body">
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div class="callout-box">
+              <strong>1. An anomaly does not automatically mean malicious activity:</strong><br/>
+              Out-of-distribution samples and distribution shift findings represent statistical deviations. They may reflect natural sensor changes, lighting variations, or rare legitimate edge cases rather than adversarial poisoning.
+            </div>
 
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <div class="callout-box">
-            <strong>1. An anomaly does not automatically mean malicious activity:</strong><br/>
-            Out-of-distribution samples and distribution shift findings represent statistical deviations. They may reflect natural sensor changes, lighting variations, or rare legitimate edge cases rather than adversarial poisoning.
-          </div>
+            <div class="callout-box">
+              <strong>2. Cryptographic validity proves record integrity, not prediction correctness:</strong><br/>
+              A valid Ed25519 signature confirms that the output payload was produced by the specified model from the given input and was not altered post-inference. It does not prove that the model's prediction is factually correct.
+            </div>
 
-          <div class="callout-box">
-            <strong>2. Cryptographic validity proves record integrity, not prediction correctness:</strong><br/>
-            A valid Ed25519 signature confirms that the output payload was produced by the specified model from the given input and was not altered post-inference. It does not prove that the model's prediction is factually correct.
-          </div>
+            <div class="callout-box">
+              <strong>3. Model hash mismatch proves file difference, not malicious intent:</strong><br/>
+              A SHA-256 divergence indicates that the candidate model binary differs from the reference baseline. This could be due to benign retraining, pruning, quantization, or malicious weight poisoning.
+            </div>
 
-          <div class="callout-box">
-            <strong>3. Model hash mismatch proves file difference, not malicious intent:</strong><br/>
-            A SHA-256 divergence indicates that the candidate model binary differs from the reference baseline. This could be due to benign retraining, pruning, quantization, or malicious weight poisoning.
-          </div>
-
-          <div class="callout-box">
-            <strong>4. Statistical heuristics cannot mathematically prove total absence of triggers:</strong><br/>
-            Clean findings on localized patch search confirm the absence of spatial corner/edge triggers. Steganographic, frequency-domain, or latent feature backdoors require white-box gradient attribution.
+            <div class="callout-box">
+              <strong>4. Statistical heuristics cannot mathematically prove total absence of triggers:</strong><br/>
+              Clean findings on localized patch search confirm the absence of spatial corner/edge triggers. Steganographic, frequency-domain, or latent feature backdoors require white-box gradient attribution.
+            </div>
           </div>
         </div>
       </section>
     </main>
   </div>
 
-  <div id="toast" class="toast hidden"></div>
+  <div id="toast-container" class="toast-container"></div>
   <script src="/static/js/api.js"></script>
 </body>
 </html>

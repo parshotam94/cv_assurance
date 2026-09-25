@@ -3,24 +3,85 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VisionTrust Assurance — Requirements Traceability & Compliance Audit</title>
+  <title>VisionTrust Assurance — Requirements Traceability &amp; Compliance Audit</title>
   <link rel="stylesheet" href="/static/css/styles.css">
+  <style>
+    /* Compliance-specific panel styles using the existing design system */
+    .panel-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .panel-header h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.2rem;
+    }
+    .panel-sub {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+    /* Scrollable table wrapper for wide tables on laptop/mobile */
+    .table-scroll-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    /* Clamp long text cells so they don't blow out table width */
+    .data-table td.cell-wrap {
+      max-width: 220px;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    @media (max-width: 1024px) {
+      .app-header {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 0.75rem 1rem;
+        gap: 0.5rem;
+      }
+      .header-actions {
+        flex-wrap: wrap;
+      }
+    }
+    @media (max-width: 600px) {
+      .content-container {
+        padding: 1rem;
+      }
+      .panel-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
 </head>
-<body class="theme-dark">
+<body>
   <!-- Navigation Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-logo">🛡️</div>
+  <aside class="app-sidebar">
+    <div class="brand-section">
+      <div class="brand-logo">VT</div>
       <div class="brand-text">
-        <span class="brand-title">VisionTrust</span>
-        <span class="brand-subtitle">Assurance Framework</span>
+        <h1>VisionTrust</h1>
+        <p>Assurance Core</p>
       </div>
     </div>
-    <ul class="nav-list">
+    <ul class="nav-links">
       <li class="nav-item"><a href="/index.html"><span class="nav-icon">■</span><span class="nav-text">Dashboard</span></a></li>
       <li class="nav-item"><a href="/datasets.html"><span class="nav-icon">◈</span><span class="nav-text">Datasets</span></a></li>
       <li class="nav-item"><a href="/models.html"><span class="nav-icon">◆</span><span class="nav-text">Models</span></a></li>
-      <li class="nav-item"><a href="/inference.html"><span class="nav-icon">▶</span><span class="nav-text">Inference & Provenance</span></a></li>
+      <li class="nav-item"><a href="/inference.html"><span class="nav-icon">▶</span><span class="nav-text">Inference &amp; Provenance</span></a></li>
       <li class="nav-item"><a href="/findings.html"><span class="nav-icon">▲</span><span class="nav-text">Findings</span></a></li>
       <li class="nav-item"><a href="/audit.html"><span class="nav-icon">⛓</span><span class="nav-text">Audit Trail</span></a></li>
       <li class="nav-item"><a href="/reports.html"><span class="nav-icon">▤</span><span class="nav-text">Assurance Reports</span></a></li>
@@ -37,7 +98,7 @@
   <div class="main-wrapper">
     <header class="app-header">
       <div class="page-title-area">
-        <h2>Validation & Compliance Audit</h2>
+        <h2>Validation &amp; Compliance Audit</h2>
         <p>Executable Traceability Matrix Against Original Engineering Requirements</p>
       </div>
       <div class="header-actions">
@@ -82,8 +143,8 @@
             <h3>Requirements Traceability Matrix</h3>
             <p class="panel-sub">Verified against unit tests, integration suites, and empirical benchmarks</p>
           </div>
-          <div class="panel-actions">
-            <select id="filter-compliance-status" class="form-control" style="width: auto;">
+          <div>
+            <select id="filter-compliance-status" class="form-control" style="width: auto; min-width: 160px;">
               <option value="ALL">All Statuses (16)</option>
               <option value="PASS">PASS Only</option>
               <option value="PARTIAL">PARTIAL Only</option>
@@ -92,18 +153,18 @@
           </div>
         </div>
 
-        <div class="table-container">
+        <div class="table-scroll-wrapper">
           <table class="data-table" id="table-compliance">
             <thead>
               <tr>
-                <th style="width: 70px;">Req ID</th>
-                <th>Requirement Name</th>
-                <th>Category</th>
-                <th style="width: 100px;">Implemented</th>
-                <th style="width: 100px;">Tested</th>
-                <th>Verification Evidence & Test Target</th>
-                <th>Limitations & Boundaries</th>
-                <th style="width: 90px;">Status</th>
+                <th style="min-width: 70px;">Req ID</th>
+                <th style="min-width: 160px;">Requirement Name</th>
+                <th style="min-width: 120px;">Category</th>
+                <th style="min-width: 100px;">Implemented</th>
+                <th style="min-width: 90px;">Tested</th>
+                <th style="min-width: 200px;">Verification Evidence &amp; Test Target</th>
+                <th style="min-width: 180px;">Limitations &amp; Boundaries</th>
+                <th style="min-width: 90px;">Status</th>
               </tr>
             </thead>
             <tbody id="tbody-compliance">
@@ -117,26 +178,28 @@
       <section class="panel-section">
         <div class="panel-header">
           <div>
-            <h3>Assurance Classification Legend & Operational Semantics</h3>
+            <h3>Assurance Classification Legend &amp; Operational Semantics</h3>
             <p class="panel-sub">Formal interpretations of assurance outcomes per cybersecurity standards</p>
           </div>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 12px;">
-          <div class="card" style="border-left: 4px solid var(--risk-low);">
-            <div style="font-weight: 700; color: var(--risk-low); margin-bottom: 4px;">PASS</div>
-            <p class="small text-muted">Requirement fully demonstrated through automated tests and empirical benchmark execution with zero unresolved failures.</p>
-          </div>
-          <div class="card" style="border-left: 4px solid var(--risk-medium);">
-            <div style="font-weight: 700; color: var(--risk-medium); margin-bottom: 4px;">PARTIAL</div>
-            <p class="small text-muted">Capability exists and passes baseline checks, but exhibits known algorithmic boundaries or requires explicit metadata.</p>
-          </div>
-          <div class="card" style="border-left: 4px solid var(--risk-critical);">
-            <div style="font-weight: 700; color: var(--risk-critical); margin-bottom: 4px;">FAIL</div>
-            <p class="small text-muted">Requirement is not currently demonstrated, failed automated tests, or requires unavailable runtime components.</p>
-          </div>
-          <div class="card" style="border-left: 4px solid var(--color-neutral);">
-            <div style="font-weight: 700; color: var(--text-muted); margin-bottom: 4px;">UNAVAILABLE</div>
-            <p class="small text-muted">Required information, weights, or reference populations are absent from the provided asset package.</p>
+        <div style="padding: 1.25rem 1.5rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+            <div class="card" style="border-left: 4px solid var(--risk-low);">
+              <div style="font-weight: 700; color: var(--risk-low); margin-bottom: 0.3rem;">PASS</div>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Requirement fully demonstrated through automated tests and empirical benchmark execution with zero unresolved failures.</p>
+            </div>
+            <div class="card" style="border-left: 4px solid var(--risk-med);">
+              <div style="font-weight: 700; color: var(--risk-med); margin-bottom: 0.3rem;">PARTIAL</div>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Capability exists and passes baseline checks, but exhibits known algorithmic boundaries or requires explicit metadata.</p>
+            </div>
+            <div class="card" style="border-left: 4px solid var(--risk-critical);">
+              <div style="font-weight: 700; color: var(--risk-critical); margin-bottom: 0.3rem;">FAIL</div>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Requirement is not currently demonstrated, failed automated tests, or requires unavailable runtime components.</p>
+            </div>
+            <div class="card" style="border-left: 4px solid var(--border-color);">
+              <div style="font-weight: 700; color: var(--text-muted); margin-bottom: 0.3rem;">UNAVAILABLE</div>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Required information, weights, or reference populations are absent from the provided asset package.</p>
+            </div>
           </div>
         </div>
       </section>
