@@ -20,6 +20,20 @@
       min-width: 120px;
     }
 
+    @media (max-width: 1280px) {
+      .compliance-content .data-table {
+        table-layout: fixed;
+        font-size: 0.78rem;
+      }
+
+      .compliance-content .data-table th,
+      .compliance-content .data-table td {
+        min-width: 0 !important;
+        padding: 0.65rem 0.45rem;
+        overflow-wrap: anywhere;
+      }
+    }
+
     @media (max-width: 768px) {
       .table-header-bar {
         align-items: stretch;
@@ -75,7 +89,7 @@
       </div>
     </header>
 
-    <main class="content-container">
+    <main class="content-container compliance-content">
       <!-- Metric Cards -->
       <section class="grid-cards" style="margin-bottom: 2rem;">
         <div class="card">
