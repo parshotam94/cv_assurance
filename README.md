@@ -50,10 +50,11 @@ Autonomous and mission-critical computer vision systems deployed in defense, med
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/visiontrust-assurance.git
-cd visiontrust-assurance
+git clone https://github.com/parshotam94/cv_assurance
+cd cv_assurance
 
 # Install dependencies offline or via local wheelhouse
+# Requirements can consume lot of data.
 pip install -r requirements.txt
 ```
 
