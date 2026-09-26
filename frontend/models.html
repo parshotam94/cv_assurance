@@ -3,36 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VisionTrust Assurance | Model Integrity & Behavioral Battery</title>
+  <title>VisionTrust Assurance | Model Integrity &amp; Behavioral Battery</title>
   <link rel="stylesheet" href="/static/css/styles.css">
   <style>
+    /* Battery control grid: responsive at 1024px and below */
     .battery-control-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 140px 200px;
+      grid-template-columns: 1fr 1fr 140px auto;
       gap: 1rem;
       align-items: flex-end;
     }
-    @media (max-width: 900px) {
+
+    /* Upload form: responsive two-column to single-column */
+    .upload-form-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    /* Dashboard bottom section: two equal columns to single column */
+    .bottom-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    /* Scrollable table wrapper to prevent horizontal page overflow */
+    .table-scroll-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 1200px) {
+      .battery-control-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .app-header {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 0.75rem 1rem;
+        gap: 0.5rem;
+      }
+      .upload-form-grid {
+        grid-template-columns: 1fr;
+      }
+      .bottom-two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
       .battery-control-grid {
         grid-template-columns: 1fr;
       }
     }
+
+    @media (max-width: 600px) {
+      .content-container {
+        padding: 1rem;
+      }
+    }
   </style>
 </head>
-<body class="theme-dark">
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-logo">🛡️</div>
+<body>
+  <aside class="app-sidebar">
+    <div class="brand-section">
+      <div class="brand-logo">VT</div>
       <div class="brand-text">
-        <span class="brand-title">VisionTrust</span>
-        <span class="brand-subtitle">Assurance Framework</span>
+        <h1>VisionTrust</h1>
+        <p>Assurance Core</p>
       </div>
     </div>
-    <ul class="nav-list">
+    <ul class="nav-links">
       <li class="nav-item"><a href="/index.html"><span class="nav-icon">■</span><span class="nav-text">Dashboard</span></a></li>
       <li class="nav-item"><a href="/datasets.html"><span class="nav-icon">◈</span><span class="nav-text">Datasets</span></a></li>
       <li class="nav-item active"><a href="/models.html"><span class="nav-icon">◆</span><span class="nav-text">Models</span></a></li>
-      <li class="nav-item"><a href="/inference.html"><span class="nav-icon">▶</span><span class="nav-text">Inference & Provenance</span></a></li>
+      <li class="nav-item"><a href="/inference.html"><span class="nav-icon">▶</span><span class="nav-text">Inference &amp; Provenance</span></a></li>
       <li class="nav-item"><a href="/findings.html"><span class="nav-icon">▲</span><span class="nav-text">Findings</span></a></li>
       <li class="nav-item"><a href="/audit.html"><span class="nav-icon">⛓</span><span class="nav-text">Audit Trail</span></a></li>
       <li class="nav-item"><a href="/reports.html"><span class="nav-icon">▤</span><span class="nav-text">Assurance Reports</span></a></li>
@@ -48,8 +98,8 @@
   <div class="main-wrapper">
     <header class="app-header">
       <div class="page-title-area">
-        <h2>Model Assurance & Behavioral Battery</h2>
-        <p>Cryptographic Fingerprinting, Model Substitution Detection & Behavioral Perturbation Stress Battery</p>
+        <h2>Model Assurance &amp; Behavioral Battery</h2>
+        <p>Cryptographic Fingerprinting, Model Substitution Detection &amp; Behavioral Perturbation Stress Battery</p>
       </div>
     </header>
 
@@ -58,11 +108,11 @@
       <section class="card" style="margin-bottom: 2rem;">
         <div class="card-title">Register Computer-Vision Model (.onnx, .pt, .pth, .ts)</div>
         <form id="upload-model-form">
-          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: center;">
+          <div class="upload-form-grid">
             <div class="dropzone" id="model-dropzone">
               <input type="file" id="model-file-input" accept=".onnx,.pt,.pth,.ts" required>
               <div class="dropzone-icon">◆</div>
-              <div style="font-weight: 600;" id="dropzone-model-name">Drag & drop model file or click to select</div>
+              <div style="font-weight: 600;" id="dropzone-model-name">Drag &amp; drop model file or click to select</div>
               <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem;">Supports ONNX Runtime and PyTorch TorchScript / State Dicts</div>
             </div>
             <div>
@@ -71,7 +121,7 @@
                 <input type="text" id="model-name-input" class="form-control" placeholder="e.g. YOLOv8_Reference or Candidate_Net">
               </div>
               <button type="submit" id="btn-upload-model" class="btn btn-primary" style="width: 100%;">
-                <span>◆</span> Inspect & Register Model
+                <span>◆</span> Inspect &amp; Register Model
               </button>
             </div>
           </div>
@@ -79,9 +129,9 @@
       </section>
 
       <!-- Model Comparison & Behavioral Battery Control Card -->
-      <section class="card" style="margin-bottom: 2rem; border-left: 4px solid var(--color-primary);">
-        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
-          <span>Model Comparison & Behavioral Battery</span>
+      <section class="card" style="margin-bottom: 2rem; border-left: 4px solid var(--primary);">
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <span>Model Comparison &amp; Behavioral Battery</span>
           <span class="badge badge-info">DIFFERENTIAL ASSURANCE</span>
         </div>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
@@ -105,7 +155,7 @@
               <label for="input-battery-samples">Battery Tests</label>
               <input type="number" id="input-battery-samples" class="form-control" value="24" min="6" max="120">
             </div>
-            <button type="submit" id="btn-run-battery" class="btn btn-primary" style="height: 40px;">
+            <button type="submit" id="btn-run-battery" class="btn btn-primary" style="height: 40px; white-space: nowrap;">
               <span>▶</span> Run Behavioral Battery
             </button>
           </div>
@@ -118,32 +168,34 @@
           <h3>Registered Models</h3>
           <span style="font-size: 0.8rem; color: var(--text-dim);">Inspect fingerprints or trigger behavioral evaluations</span>
         </div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Framework</th>
-              <th>SHA-256 Identity</th>
-              <th>Parameters</th>
-              <th>Access Level</th>
-              <th>Status</th>
-              <th>Risk Score</th>
-              <th>Disposition</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="models-tbody">
-            <tr>
-              <td colspan="10" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading registered models...</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="min-width: 60px;">ID</th>
+                <th style="min-width: 120px;">Name</th>
+                <th style="min-width: 100px;">Framework</th>
+                <th style="min-width: 160px;">SHA-256 Identity</th>
+                <th style="min-width: 100px;">Parameters</th>
+                <th style="min-width: 100px;">Access Level</th>
+                <th style="min-width: 90px;">Status</th>
+                <th style="min-width: 90px;">Risk Score</th>
+                <th style="min-width: 100px;">Disposition</th>
+                <th style="min-width: 100px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="models-tbody">
+              <tr>
+                <td colspan="10" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading registered models...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <!-- Model Evaluation Results Panel -->
       <section id="model-analysis-panel" class="card" style="display: none; margin-bottom: 2rem;">
-        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
           <span>Model Assurance Results: <span id="res-model-id" style="color: var(--accent-cyan);"></span></span>
           <span id="res-model-disposition"></span>
         </div>
@@ -168,7 +220,7 @@
 
         <!-- Fingerprint & Weights Summary -->
         <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--text-muted); text-transform: uppercase;">
-          Cryptographic Fingerprint & Layer Attribution Telemetry
+          Cryptographic Fingerprint &amp; Layer Attribution Telemetry
         </h4>
         <div class="evidence-block" id="model-fp-evidence"></div>
       </section>

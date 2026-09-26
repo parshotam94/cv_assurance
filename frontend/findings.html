@@ -5,6 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VisionTrust Assurance | Assurance Findings</title>
   <link rel="stylesheet" href="/static/css/styles.css">
+  <style>
+    /* Scrollable table wrapper to prevent horizontal page overflow */
+    .table-scroll-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 100%;
+    }
+    /* Allow text cells to wrap naturally in the table */
+    .data-table td.cell-wrap {
+      max-width: 200px;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    @media (max-width: 1280px) {
+      .findings-content .data-table {
+        table-layout: fixed;
+        font-size: 0.78rem;
+      }
+
+      .findings-content .data-table th,
+      .findings-content .data-table td {
+        min-width: 0 !important;
+        padding: 0.65rem 0.45rem;
+        overflow-wrap: anywhere;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .app-header {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 0.75rem 1rem;
+        gap: 0.5rem;
+      }
+    }
+    @media (max-width: 600px) {
+      .content-container {
+        padding: 1rem;
+      }
+    }
+  </style>
 </head>
 <body>
   <aside class="app-sidebar">
@@ -19,7 +61,7 @@
       <li class="nav-item"><a href="/index.html"><span class="nav-icon">■</span><span class="nav-text">Dashboard</span></a></li>
       <li class="nav-item"><a href="/datasets.html"><span class="nav-icon">◈</span><span class="nav-text">Datasets</span></a></li>
       <li class="nav-item"><a href="/models.html"><span class="nav-icon">◆</span><span class="nav-text">Models</span></a></li>
-      <li class="nav-item"><a href="/inference.html"><span class="nav-icon">▶</span><span class="nav-text">Inference & Provenance</span></a></li>
+      <li class="nav-item"><a href="/inference.html"><span class="nav-icon">▶</span><span class="nav-text">Inference &amp; Provenance</span></a></li>
       <li class="nav-item active"><a href="/findings.html"><span class="nav-icon">▲</span><span class="nav-text">Findings</span></a></li>
       <li class="nav-item"><a href="/audit.html"><span class="nav-icon">⛓</span><span class="nav-text">Audit Trail</span></a></li>
       <li class="nav-item"><a href="/reports.html"><span class="nav-icon">▤</span><span class="nav-text">Assurance Reports</span></a></li>
@@ -35,17 +77,17 @@
   <div class="main-wrapper">
     <header class="app-header">
       <div class="page-title-area">
-        <h2>Assurance Findings & Evidence Explorer</h2>
-        <p>Explainable Vulnerability Attribution, Evidence Chains & Actionable Dispositions</p>
+        <h2>Assurance Findings &amp; Evidence Explorer</h2>
+        <p>Explainable Vulnerability Attribution, Evidence Chains &amp; Actionable Dispositions</p>
       </div>
     </header>
 
-    <main class="content-container">
+    <main class="content-container findings-content">
       <!-- Filter Bar -->
       <section class="card" style="margin-bottom: 2rem; padding: 1rem 1.5rem;">
-        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-          <div style="flex: 1; min-width: 180px;">
-            <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Severity Filter</label>
+        <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 160px;">
+            <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; display: block; margin-bottom: 0.3rem;">Severity Filter</label>
             <select id="filter-severity" class="form-control" style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
               <option value="">All Severities</option>
               <option value="CRITICAL">CRITICAL</option>
@@ -54,8 +96,8 @@
               <option value="LOW">LOW</option>
             </select>
           </div>
-          <div style="flex: 1; min-width: 180px;">
-            <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Category Filter</label>
+          <div style="flex: 1; min-width: 160px;">
+            <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; display: block; margin-bottom: 0.3rem;">Category Filter</label>
             <select id="filter-category" class="form-control" style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
               <option value="">All Categories</option>
               <option value="LABEL_FLIP">Label Flip / Mislabelling</option>
@@ -69,8 +111,8 @@
               <option value="DISTRIBUTION_SHIFT">Distribution Shift</option>
             </select>
           </div>
-          <div style="flex: 1; min-width: 180px;">
-            <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Asset ID</label>
+          <div style="flex: 1; min-width: 160px;">
+            <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; display: block; margin-bottom: 0.3rem;">Asset ID</label>
             <input type="text" id="filter-asset" class="form-control" placeholder="Search Asset ID..." style="font-size: 0.85rem; padding: 0.4rem 0.6rem;">
           </div>
         </div>
@@ -81,26 +123,28 @@
         <div class="table-header-bar">
           <h3>Identified Assurance Findings</h3>
         </div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Asset</th>
-              <th>Category</th>
-              <th>Severity</th>
-              <th>Confidence</th>
-              <th>Risk Score</th>
-              <th>Title</th>
-              <th>Recommendation</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody id="findings-tbody">
-            <tr>
-              <td colspan="9" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading findings...</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-scroll-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="min-width: 70px;">ID</th>
+                <th style="min-width: 100px;">Asset</th>
+                <th style="min-width: 140px;">Category</th>
+                <th style="min-width: 90px;">Severity</th>
+                <th style="min-width: 90px;">Confidence</th>
+                <th style="min-width: 90px;">Risk Score</th>
+                <th style="min-width: 160px;">Title</th>
+                <th style="min-width: 120px;">Recommendation</th>
+                <th style="min-width: 80px;">Details</th>
+              </tr>
+            </thead>
+            <tbody id="findings-tbody">
+              <tr>
+                <td colspan="9" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading findings...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
   </div>
@@ -127,7 +171,7 @@
       </div>
 
       <div style="margin-bottom: 1.25rem;">
-        <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Empirical Evidence & Telemetry</label>
+        <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Empirical Evidence &amp; Telemetry</label>
         <div id="drawer-evidence" class="evidence-block"></div>
       </div>
 
@@ -137,7 +181,7 @@
       </div>
 
       <div style="margin-bottom: 1.25rem;">
-        <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Technical Limitations & Assumptions</label>
+        <label style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Technical Limitations &amp; Assumptions</label>
         <div id="drawer-limitations" class="evidence-block"></div>
       </div>
 

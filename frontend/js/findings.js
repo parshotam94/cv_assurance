@@ -66,13 +66,13 @@ function renderFindingsTable(findings) {
   tbody.innerHTML = findings.map(f => `
     <tr>
       <td><code style="color: var(--accent-cyan);">${f.finding_id}</code></td>
-      <td><span style="font-size: 0.78rem; color: var(--text-dim);">${f.asset_type}:</span> ${f.asset_id}</td>
-      <td><span class="badge badge-info">${f.category}</span></td>
+      <td class="cell-wrap"><span style="font-size: 0.78rem; color: var(--text-dim);">${f.asset_type}:</span> ${f.asset_id}</td>
+      <td class="cell-wrap"><span class="badge badge-info">${f.category}</span></td>
       <td>${getRiskBadge(f.severity)}</td>
       <td>${(f.confidence * 100).toFixed(0)}%</td>
       <td><strong>${f.risk_score.toFixed(1)}</strong></td>
-      <td>${f.title}</td>
-      <td>${getRiskBadge(f.recommendation)}</td>
+      <td class="cell-wrap">${f.title}</td>
+      <td class="cell-wrap">${getRiskBadge(f.recommendation)}</td>
       <td>
         <button class="btn btn-secondary btn-sm btn-open-finding" data-id="${f.finding_id}">
           Evidence
